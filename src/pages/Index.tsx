@@ -185,16 +185,18 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
                   crateContent.map((item: any, index: number) => {
                     const globalIndex = rep * crateContent.length + index;
                     const itemWidth = window.innerWidth < 640 ? 208 : window.innerWidth < 768 ? 248 : 288;
+                    
+                    // Calculate position relative to center (0 = center of screen)
                     const currentPosition = globalIndex * itemWidth - spinOffset;
                     const visibilityRange = window.innerWidth < 768 ? 800 : 1200;
-                    const centerPosition = visibilityRange / 2;
                     
-                    // Only render items within visibility range
-                    if (Math.abs(currentPosition - centerPosition) > visibilityRange) {
+                    // Only render items within visibility range from center
+                    if (Math.abs(currentPosition) > visibilityRange) {
                       return null;
                     }
                     
-                    const isCenter = Math.abs(currentPosition - centerPosition) < 50;
+                    // Item is center if it's close to position 0
+                    const isCenter = Math.abs(currentPosition) < 50;
                     
                     return (
                       <div 
