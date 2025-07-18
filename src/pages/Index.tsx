@@ -43,10 +43,14 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
   useEffect(() => {
     if (spinPhase === 'stopping' && winningTag) {
       const winnerItemIndex = crateContent?.findIndex((item: any) => item.tag === winningTag) || 0;
-      const targetOffset = winnerItemIndex * 296; // 280px width + 16px gap
+      // Use responsive calculations
+      const baseItemWidth = typeof window !== 'undefined' && window.innerWidth < 640 ? 208 : window.innerWidth < 768 ? 248 : 280;
+      const baseGap = typeof window !== 'undefined' && window.innerWidth < 640 ? 8 : window.innerWidth < 768 ? 16 : 32;
+      const itemWidth = baseItemWidth + baseGap;
+      const targetOffset = winnerItemIndex * itemWidth;
       const currentOffset = spinOffset;
-      const distance = targetOffset - (currentOffset % (crateContent?.length * 296 || 296));
-      const finalOffset = currentOffset + distance + (crateContent?.length * 296 * 3 || 296); // Add extra spins
+      const distance = targetOffset - (currentOffset % (crateContent?.length * itemWidth || itemWidth));
+      const finalOffset = currentOffset + distance + (crateContent?.length * itemWidth * 3 || itemWidth); // Add extra spins
       
       const duration = 2000; // 2 seconds deceleration
       const startTime = performance.now();
@@ -164,15 +168,15 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
         </div>
 
         {/* Featured Items (Top 3) - Spinning Carousel */}
-        <div className="relative overflow-hidden mb-8">
+        <div className="relative overflow-hidden mb-8 px-4">
           <div className="flex justify-center">
-            <div className="relative w-[900px] h-[220px] overflow-hidden">
-              {/* Center highlight box */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[280px] h-[200px] border-4 border-yellow-400 rounded-lg bg-yellow-400/10 z-10 pointer-events-none"></div>
+            <div className="relative w-full max-w-[900px] h-[200px] sm:h-[220px] overflow-hidden">
+              {/* Center highlight box - responsive */}
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[clamp(200px,30vw,280px)] h-[clamp(160px,25vh,200px)] border-4 border-yellow-400 rounded-lg bg-yellow-400/10 z-10 pointer-events-none"></div>
               
               {/* Spinning items container - showing only 3 items */}
               <div 
-                className="flex gap-8 absolute left-1/2 top-1/2 transform -translate-y-1/2 transition-transform duration-75"
+                className="flex gap-2 sm:gap-4 md:gap-8 absolute left-1/2 top-1/2 transform -translate-y-1/2 transition-transform duration-75"
                 style={{
                   transform: `translateX(calc(-50% - ${spinOffset}px)) translateY(-50%)`,
                   willChange: 'transform'
@@ -180,34 +184,40 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
               >
                 {/* Repeat items for smooth infinite scroll */}
                 {crateContent && Array(15).fill(crateContent).flat().map((item: any, idx: number) => {
-                  const itemWidth = 288; // 280px + 8px gap
+                  const baseItemWidth = typeof window !== 'undefined' && window.innerWidth < 640 ? 208 : window.innerWidth < 768 ? 248 : 280;
+                  const baseGap = typeof window !== 'undefined' && window.innerWidth < 640 ? 8 : window.innerWidth < 768 ? 16 : 32;
+                  const itemWidth = baseItemWidth + baseGap;
                   const currentPosition = (idx * itemWidth) - (spinOffset % (crateContent.length * itemWidth));
-                  const isVisible = Math.abs(currentPosition) < 450; // Show 3 items (center + 1 on each side)
+                  const visibilityRange = typeof window !== 'undefined' && window.innerWidth < 768 ? 300 : 450;
+                  const isVisible = Math.abs(currentPosition) < visibilityRange;
                   
                   if (!isVisible) return null;
                   
                   return (
                     <div 
                       key={idx} 
-                      className={`relative p-4 rounded-lg border-2 flex-shrink-0 transition-all duration-300 ${
-                        Math.abs(currentPosition) < 10 ? 'border-yellow-400 bg-yellow-500/20 scale-105' : 
+                      className={`relative p-2 sm:p-3 md:p-4 rounded-lg border-2 flex-shrink-0 transition-all duration-300 ${
+                        Math.abs(currentPosition) < 15 ? 'border-yellow-400 bg-yellow-500/20 scale-105' : 
                         'border-gray-600 bg-gray-800/50 scale-95'
                       }`} 
-                      style={{width: 280, height: 200}}
+                      style={{
+                        width: 'clamp(200px, 30vw, 280px)',
+                        height: 'clamp(160px, 25vh, 200px)'
+                      }}
                     >
                       <div className="text-center h-full flex flex-col">
-                        <div className="text-lg font-bold text-white mb-2">
+                        <div className="text-sm sm:text-base md:text-lg font-bold text-white mb-1 sm:mb-2 leading-tight">
                           {item.tag?.replace('inventory.weapon.', '').replace(/_/g, ' ')}
                         </div>
-                        <div className="flex-1 flex items-center justify-center bg-gray-900/50 rounded mb-2">
-                          <img src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=120&h=120&fit=crop" alt={item.tag} className="w-30 h-30 object-contain" />
+                        <div className="flex-1 flex items-center justify-center bg-gray-900/50 rounded mb-1 sm:mb-2">
+                          <img src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=120&h=120&fit=crop" alt={item.tag} className="w-16 h-16 sm:w-20 sm:h-20 md:w-30 md:h-30 object-contain" />
                         </div>
-                        <div className={`text-sm font-semibold ${getRarityColor(item.rarity)}`}>
+                        <div className={`text-xs sm:text-sm font-semibold ${getRarityColor(item.rarity)}`}>
                           {getRarityName(item.rarity)}
                         </div>
                       </div>
-                      {Math.abs(currentPosition) < 10 && spinPhase === 'idle' && winningTag && (
-                        <div className="absolute -top-2 -right-2 bg-yellow-500 text-black px-2 py-1 rounded text-xs font-bold">
+                      {Math.abs(currentPosition) < 15 && spinPhase === 'idle' && winningTag && (
+                        <div className="absolute -top-1 sm:-top-2 -right-1 sm:-right-2 bg-yellow-500 text-black px-1 sm:px-2 py-1 rounded text-xs font-bold">
                           Winner!
                         </div>
                       )}
