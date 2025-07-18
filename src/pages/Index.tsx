@@ -181,46 +181,52 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
                 }}
               >
                 {/* Repeat items for smooth infinite scroll */}
-                {crateContent && Array(15).fill(crateContent).flat().map((item: any, idx: number) => {
-                  // Use consistent responsive values
+                {crateContent && (() => {
+                  const repeatedItems = Array(15).fill(crateContent).flat();
+                  const originalLength = crateContent.length;
                   const itemWidth = window.innerWidth < 640 ? 208 : window.innerWidth < 768 ? 248 : 288;
-                  const currentPosition = (idx * itemWidth) - (spinOffset % (crateContent.length * itemWidth));
+                  const totalWidth = originalLength * itemWidth;
                   const visibilityRange = window.innerWidth < 768 ? 350 : 500;
-                  const isVisible = Math.abs(currentPosition) < visibilityRange;
                   
-                  if (!isVisible) return null;
-                  
-                  return (
-                    <div 
-                      key={idx} 
-                      className={`relative p-2 sm:p-3 md:p-4 rounded-lg border-2 flex-shrink-0 transition-all duration-300 ${
-                        Math.abs(currentPosition) < 15 ? 'border-yellow-400 bg-yellow-500/20 scale-105' : 
-                        'border-gray-600 bg-gray-800/50 scale-95'
-                      }`} 
-                      style={{
-                        width: window.innerWidth < 640 ? '200px' : window.innerWidth < 768 ? '240px' : '280px',
-                        height: window.innerWidth < 640 ? '180px' : window.innerWidth < 768 ? '200px' : '220px'
-                      }}
-                    >
-                      <div className="text-center h-full flex flex-col">
-                        <div className="text-sm sm:text-base md:text-lg font-bold text-white mb-1 sm:mb-2 leading-tight">
-                          {item.tag?.replace('inventory.weapon.', '').replace(/_/g, ' ')}
-                        </div>
-                        <div className="flex-1 flex items-center justify-center bg-gray-900/50 rounded mb-1 sm:mb-2">
-                          <img src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=120&h=120&fit=crop" alt={item.tag} className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 object-contain" />
-                        </div>
-                        <div className={`text-xs sm:text-sm font-semibold ${getRarityColor(item.rarity)}`}>
-                          {getRarityName(item.rarity)}
-                        </div>
-                      </div>
-                      {Math.abs(currentPosition) < 15 && spinPhase === 'idle' && winningTag && (
-                        <div className="absolute -top-1 sm:-top-2 -right-1 sm:-right-2 bg-yellow-500 text-black px-1 sm:px-2 py-1 rounded text-xs font-bold">
-                          Winner!
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
+                   return repeatedItems.map((item: any, idx: number) => {
+                     // Calculate position with proper infinite scroll
+                     const currentPosition = (idx * itemWidth) - (spinOffset % totalWidth);
+                     const isVisible = Math.abs(currentPosition) < visibilityRange;
+                   
+                     if (!isVisible) return null;
+                   
+                     return (
+                       <div 
+                         key={idx} 
+                         className={`relative p-2 sm:p-3 md:p-4 rounded-lg border-2 flex-shrink-0 transition-all duration-300 ${
+                           Math.abs(currentPosition) < 15 ? 'border-yellow-400 bg-yellow-500/20 scale-105' : 
+                           'border-gray-600 bg-gray-800/50 scale-95'
+                         }`} 
+                         style={{
+                           width: window.innerWidth < 640 ? '200px' : window.innerWidth < 768 ? '240px' : '280px',
+                           height: window.innerWidth < 640 ? '180px' : window.innerWidth < 768 ? '200px' : '220px'
+                         }}
+                       >
+                         <div className="text-center h-full flex flex-col">
+                           <div className="text-sm sm:text-base md:text-lg font-bold text-white mb-1 sm:mb-2 leading-tight">
+                             {item.tag?.replace('inventory.weapon.', '').replace(/_/g, ' ')}
+                           </div>
+                           <div className="flex-1 flex items-center justify-center bg-gray-900/50 rounded mb-1 sm:mb-2">
+                             <img src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=120&h=120&fit=crop" alt={item.tag} className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 object-contain" />
+                           </div>
+                           <div className={`text-xs sm:text-sm font-semibold ${getRarityColor(item.rarity)}`}>
+                             {getRarityName(item.rarity)}
+                           </div>
+                         </div>
+                         {Math.abs(currentPosition) < 15 && spinPhase === 'idle' && winningTag && (
+                           <div className="absolute -top-1 sm:-top-2 -right-1 sm:-right-2 bg-yellow-500 text-black px-1 sm:px-2 py-1 rounded text-xs font-bold">
+                             Winner!
+                           </div>
+                         )}
+                       </div>
+                     );
+                   });
+                 })()}
               </div>
             </div>
           </div>
