@@ -41,16 +41,33 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
   if (!isOpen) return null;
   
   return (
-    <div className="fixed inset-0 z-50 bg-black w-screen h-screen overflow-y-auto" style={{
-      background: 'linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0f0f0f 100%)',
-      backgroundImage: `
-        radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
-        radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.1) 0%, transparent 50%),
-        linear-gradient(45deg, transparent 48%, rgba(59, 130, 246, 0.05) 49%, rgba(59, 130, 246, 0.05) 51%, transparent 52%)
-      `,
-      backgroundSize: '100% 100%, 100% 100%, 40px 40px'
-    }}>
-      <div className="relative w-full h-full flex flex-col text-white">
+    <div className="fixed inset-0 z-50 bg-black w-screen h-screen overflow-y-auto">
+      <div className="relative w-full h-full flex flex-col text-white" style={{
+        background: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)',
+        backgroundImage: `
+          repeating-linear-gradient(
+            0deg,
+            transparent,
+            transparent 20px,
+            rgba(255, 255, 255, 0.02) 20px,
+            rgba(255, 255, 255, 0.02) 22px
+          ),
+          repeating-linear-gradient(
+            60deg,
+            transparent,
+            transparent 20px,
+            rgba(255, 255, 255, 0.02) 20px,
+            rgba(255, 255, 255, 0.02) 22px
+          ),
+          repeating-linear-gradient(
+            120deg,
+            transparent,
+            transparent 20px,
+            rgba(255, 255, 255, 0.02) 20px,
+            rgba(255, 255, 255, 0.02) 22px
+          )
+        `
+      }}>
         {/* Close button */}
         <button
           className="absolute top-8 right-12 text-gray-400 hover:text-white text-4xl font-bold z-20"
