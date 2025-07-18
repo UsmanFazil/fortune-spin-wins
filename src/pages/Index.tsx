@@ -182,51 +182,95 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
               >
                 {/* Repeat items for smooth infinite scroll */}
                 {crateContent && (() => {
-                  const repeatedItems = Array(15).fill(crateContent).flat();
                   const originalLength = crateContent.length;
                   const itemWidth = window.innerWidth < 640 ? 208 : window.innerWidth < 768 ? 248 : 288;
-                  const totalWidth = originalLength * itemWidth;
-                  const visibilityRange = window.innerWidth < 768 ? 350 : 500;
+                  const visibilityRange = window.innerWidth < 768 ? 600 : 800;
                   
-                   return repeatedItems.map((item: any, idx: number) => {
-                     // Calculate position with proper infinite scroll
-                     const currentPosition = (idx * itemWidth) - (spinOffset % totalWidth);
-                     const isVisible = Math.abs(currentPosition) < visibilityRange;
-                   
-                     if (!isVisible) return null;
-                   
-                     return (
-                       <div 
-                         key={idx} 
-                         className={`relative p-2 sm:p-3 md:p-4 rounded-lg border-2 flex-shrink-0 transition-all duration-300 ${
-                           Math.abs(currentPosition) < 15 ? 'border-yellow-400 bg-yellow-500/20 scale-105' : 
-                           'border-gray-600 bg-gray-800/50 scale-95'
-                         }`} 
-                         style={{
-                           width: window.innerWidth < 640 ? '200px' : window.innerWidth < 768 ? '240px' : '280px',
-                           height: window.innerWidth < 640 ? '180px' : window.innerWidth < 768 ? '200px' : '220px'
-                         }}
-                       >
-                         <div className="text-center h-full flex flex-col">
-                           <div className="text-sm sm:text-base md:text-lg font-bold text-white mb-1 sm:mb-2 leading-tight">
-                             {item.tag?.replace('inventory.weapon.', '').replace(/_/g, ' ')}
-                           </div>
-                           <div className="flex-1 flex items-center justify-center bg-gray-900/50 rounded mb-1 sm:mb-2">
-                             <img src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=120&h=120&fit=crop" alt={item.tag} className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 object-contain" />
-                           </div>
-                           <div className={`text-xs sm:text-sm font-semibold ${getRarityColor(item.rarity)}`}>
-                             {getRarityName(item.rarity)}
-                           </div>
-                         </div>
-                         {Math.abs(currentPosition) < 15 && spinPhase === 'idle' && winningTag && (
-                           <div className="absolute -top-1 sm:-top-2 -right-1 sm:-right-2 bg-yellow-500 text-black px-1 sm:px-2 py-1 rounded text-xs font-bold">
-                             Winner!
-                           </div>
-                         )}
-                       </div>
-                     );
-                   });
-                 })()}
+                  // Calculate how many items we need to fill the visible area plus buffer
+                  const itemsNeeded = Math.ceil(visibilityRange / itemWidth) + 10;
+                  
+                  const visibleItems = [];
+                  
+                  for (let i = 0; i < itemsNeeded; i++) {
+                    // Calculate the actual position of this item
+                    const actualPosition = (i * itemWidth) - spinOffset;
+                    
+                    // Wrap around to create infinite scroll
+                    const wrappedPosition = ((actualPosition % (originalLength * itemWidth)) + (originalLength * itemWidth)) % (originalLength * itemWidth);
+                    const itemIndex = Math.floor(wrappedPosition / itemWidth);
+                    const item = crateContent[itemIndex];
+                    
+                    // Check if this item should be visible
+                    const screenPosition = actualPosition;
+                    const isVisible = screenPosition > -visibilityRange/2 && screenPosition < visibilityRange/2;
+                    
+                    if (isVisible && item) {
+                      visibleItems.push({
+                        item,
+                        key: `${itemIndex}-${i}`,
+                        position: screenPosition,
+                        isCenter: Math.abs(screenPosition) < 15
+                      });
+                    }
+                  }
+                  
+                  // Also add items going in the negative direction for seamless infinite scroll
+                  for (let i = 1; i <= itemsNeeded; i++) {
+                    const actualPosition = (-i * itemWidth) - spinOffset;
+                    const wrappedPosition = ((actualPosition % (originalLength * itemWidth)) + (originalLength * itemWidth)) % (originalLength * itemWidth);
+                    const itemIndex = Math.floor(wrappedPosition / itemWidth);
+                    const item = crateContent[itemIndex];
+                    
+                    const screenPosition = actualPosition;
+                    const isVisible = screenPosition > -visibilityRange/2 && screenPosition < visibilityRange/2;
+                    
+                    if (isVisible && item) {
+                      visibleItems.push({
+                        item,
+                        key: `${itemIndex}-neg-${i}`,
+                        position: screenPosition,
+                        isCenter: Math.abs(screenPosition) < 15
+                      });
+                    }
+                  }
+                  
+                  return visibleItems.map(({ item, key, position, isCenter }) => (
+                    <div 
+                      key={key} 
+                      className={`relative p-2 sm:p-3 md:p-4 rounded-lg border-2 flex-shrink-0 transition-all duration-300 ${
+                        isCenter ? 'border-yellow-400 bg-yellow-500/20 scale-105' : 
+                        'border-gray-600 bg-gray-800/50 scale-95'
+                      }`} 
+                      style={{
+                        width: window.innerWidth < 640 ? '200px' : window.innerWidth < 768 ? '240px' : '280px',
+                        height: window.innerWidth < 640 ? '180px' : window.innerWidth < 768 ? '200px' : '220px',
+                        transform: `translateX(${position}px)`,
+                        position: 'absolute',
+                        left: '50%',
+                        top: '50%',
+                        marginLeft: '-50%',
+                        marginTop: '-50%'
+                      }}
+                    >
+                      <div className="text-center h-full flex flex-col">
+                        <div className="text-sm sm:text-base md:text-lg font-bold text-white mb-1 sm:mb-2 leading-tight">
+                          {item.tag?.replace('inventory.weapon.', '').replace(/_/g, ' ')}
+                        </div>
+                        <div className="flex-1 flex items-center justify-center bg-gray-900/50 rounded mb-1 sm:mb-2">
+                          <img src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=120&h=120&fit=crop" alt={item.tag} className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 object-contain" />
+                        </div>
+                        <div className={`text-xs sm:text-sm font-semibold ${getRarityColor(item.rarity)}`}>
+                          {getRarityName(item.rarity)}
+                        </div>
+                      </div>
+                      {isCenter && spinPhase === 'idle' && winningTag && (
+                        <div className="absolute -top-1 sm:-top-2 -right-1 sm:-right-2 bg-yellow-500 text-black px-1 sm:px-2 py-1 rounded text-xs font-bold">
+                          Winner!
+                        </div>
+                      )}
+                    </div>
+                  ));
+                })()}
               </div>
             </div>
           </div>
