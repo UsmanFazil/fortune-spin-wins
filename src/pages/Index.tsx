@@ -164,13 +164,13 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
         </div>
 
         {/* Featured Items (Top 3) - Spinning Carousel */}
-        <div className="relative overflow-hidden mb-12">
+        <div className="relative overflow-hidden mb-8">
           <div className="flex justify-center">
             <div className="relative w-[900px] h-[220px] overflow-hidden">
-              {/* Center indicator arrow */}
-              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1 h-full bg-yellow-400 opacity-70 z-10 pointer-events-none"></div>
+              {/* Center highlight box */}
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[280px] h-[200px] border-4 border-yellow-400 rounded-lg bg-yellow-400/10 z-10 pointer-events-none"></div>
               
-              {/* Spinning items container */}
+              {/* Spinning items container - showing only 3 items */}
               <div 
                 className="flex gap-8 absolute left-1/2 top-1/2 transform -translate-y-1/2 transition-transform duration-75"
                 style={{
@@ -179,14 +179,18 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
                 }}
               >
                 {/* Repeat items for smooth infinite scroll */}
-                {crateContent && Array(10).fill(crateContent).flat().map((item: any, idx: number) => {
-                  const isCenter = Math.abs((idx * 296) - (spinOffset % (crateContent.length * 296))) < 148;
+                {crateContent && Array(15).fill(crateContent).flat().map((item: any, idx: number) => {
+                  const itemWidth = 288; // 280px + 8px gap
+                  const currentPosition = (idx * itemWidth) - (spinOffset % (crateContent.length * itemWidth));
+                  const isVisible = Math.abs(currentPosition) < 450; // Show 3 items (center + 1 on each side)
+                  
+                  if (!isVisible) return null;
+                  
                   return (
                     <div 
                       key={idx} 
                       className={`relative p-4 rounded-lg border-2 flex-shrink-0 transition-all duration-300 ${
-                        isCenter ? 'border-yellow-400 bg-yellow-500/20 scale-110' : 
-                        winningTag && winningTag === item.tag && spinPhase === 'idle' ? 'border-yellow-400 bg-yellow-500/20' : 
+                        Math.abs(currentPosition) < 10 ? 'border-yellow-400 bg-yellow-500/20 scale-105' : 
                         'border-gray-600 bg-gray-800/50 scale-95'
                       }`} 
                       style={{width: 280, height: 200}}
@@ -202,7 +206,7 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
                           {getRarityName(item.rarity)}
                         </div>
                       </div>
-                      {isCenter && spinPhase === 'idle' && (
+                      {Math.abs(currentPosition) < 10 && spinPhase === 'idle' && winningTag && (
                         <div className="absolute -top-2 -right-2 bg-yellow-500 text-black px-2 py-1 rounded text-xs font-bold">
                           Winner!
                         </div>
@@ -215,20 +219,20 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
           </div>
         </div>
 
+        {/* Arrow pointing down */}
+        <div className="flex justify-center mb-4">
+          <div className="w-0 h-0 border-l-[20px] border-r-[20px] border-t-[25px] border-transparent border-t-yellow-400"></div>
+        </div>
+
         {/* SPIN Button */}
         <div className="flex justify-center mb-8">
-          <div className="relative">
-            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-              <div className="w-0 h-0 border-l-4 border-r-4 border-b-6 border-transparent border-b-yellow-400"></div>
-            </div>
-            <button
-              className="px-20 py-4 bg-yellow-600 hover:bg-yellow-700 rounded-lg font-bold text-2xl disabled:opacity-60 shadow-lg transition-all duration-200"
-              onClick={onSpin}
-              disabled={spinning || winnerIndex !== null}
-            >
-              {spinning ? 'Spinning...' : 'SPIN'}
-            </button>
-          </div>
+          <button
+            className="px-20 py-4 bg-yellow-600 hover:bg-yellow-700 rounded-lg font-bold text-2xl disabled:opacity-60 shadow-lg transition-all duration-200"
+            onClick={onSpin}
+            disabled={spinning || winnerIndex !== null}
+          >
+            {spinning ? 'Spinning...' : 'SPIN'}
+          </button>
         </div>
 
         {/* Info Text */}
