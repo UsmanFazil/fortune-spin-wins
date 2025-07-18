@@ -6,7 +6,89 @@ import CrateSpinner from "@/components/OpenCrates/CrateSpinner";
 
 // Simple Modal component
 function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems, winnerIndex, crateContent, winningTag, spinReward, spinPhase, pendingReward }: any) {
+  const carouselRef = useRef<HTMLDivElement>(null);
   const [showWin, setShowWin] = useState(false);
+  const [spinOffset, setSpinOffset] = useState(0);
+  const animationRef = useRef<number>();
+
+  // Animation effects for casino-style spinning
+  useEffect(() => {
+    if (spinPhase === 'spinning') {
+      setSpinOffset(0);
+      let offset = 0;
+      let speed = 30; // Start fast
+      let lastTime = performance.now();
+      
+      const animate = (now: number) => {
+        const delta = now - lastTime;
+        lastTime = now;
+        offset += speed * (delta / 16);
+        setSpinOffset(offset);
+        
+        if (spinPhase === 'spinning') {
+          animationRef.current = requestAnimationFrame(animate);
+        }
+      };
+      animationRef.current = requestAnimationFrame(animate);
+      
+      return () => {
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+        }
+      };
+    }
+  }, [spinPhase]);
+
+  // Deceleration phase - slow down and stop at winner
+  useEffect(() => {
+    if (spinPhase === 'stopping' && winningTag) {
+      const winnerItemIndex = crateContent?.findIndex((item: any) => item.tag === winningTag) || 0;
+      const targetOffset = winnerItemIndex * 296; // 280px width + 16px gap
+      const currentOffset = spinOffset;
+      const distance = targetOffset - (currentOffset % (crateContent?.length * 296 || 296));
+      const finalOffset = currentOffset + distance + (crateContent?.length * 296 * 3 || 296); // Add extra spins
+      
+      const duration = 2000; // 2 seconds deceleration
+      const startTime = performance.now();
+      const startOffset = currentOffset;
+      
+      const animate = (now: number) => {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        
+        // Ease out cubic for smooth deceleration
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        const currentAnimOffset = startOffset + (finalOffset - startOffset) * easeOut;
+        setSpinOffset(currentAnimOffset);
+        
+        if (progress < 1) {
+          animationRef.current = requestAnimationFrame(animate);
+        } else {
+          // Animation complete
+          setTimeout(() => setShowWin(true), 300);
+        }
+      };
+      
+      animationRef.current = requestAnimationFrame(animate);
+      
+      return () => {
+        if (animationRef.current) {
+          cancelAnimationFrame(animationRef.current);
+        }
+      };
+    }
+  }, [spinPhase, winningTag, crateContent, spinOffset]);
+
+  // Reset animation when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setSpinOffset(0);
+      setShowWin(false);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (winnerIndex !== null) {
@@ -81,32 +163,56 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
           <h1 className="text-4xl font-bold text-white mb-2">HOSTILE LEGACY BOX</h1>
         </div>
 
-        {/* Featured Items (Top 3) */}
-        <div className="flex justify-center gap-8 mb-12">
-          {crateContent && crateContent.slice(0, 3).map((item: any, idx: number) => (
-            <div key={idx} className={`relative p-4 rounded-lg border-2 ${
-              idx === 1 ? 'border-yellow-400 bg-yellow-500/20' : 
-              winningTag && winningTag === item.tag ? 'border-yellow-400 bg-yellow-500/20' : 
-              'border-gray-600 bg-gray-800/50'
-            } transition-all duration-300`} style={{width: 280, height: 200}}>
-              <div className="text-center h-full flex flex-col">
-                <div className="text-lg font-bold text-white mb-2">
-                  {item.tag?.replace('inventory.weapon.', '').replace(/_/g, ' ')}
-                </div>
-                <div className="flex-1 flex items-center justify-center bg-gray-900/50 rounded mb-2">
-                  <img src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=120&h=120&fit=crop" alt={item.tag} className="w-30 h-30 object-contain" />
-                </div>
-                <div className={`text-sm font-semibold ${getRarityColor(item.rarity)}`}>
-                  {getRarityName(item.rarity)}
-                </div>
+        {/* Featured Items (Top 3) - Spinning Carousel */}
+        <div className="relative overflow-hidden mb-12">
+          <div className="flex justify-center">
+            <div className="relative w-[900px] h-[220px] overflow-hidden">
+              {/* Center indicator arrow */}
+              <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1 h-full bg-yellow-400 opacity-70 z-10 pointer-events-none"></div>
+              
+              {/* Spinning items container */}
+              <div 
+                className="flex gap-8 absolute left-1/2 top-1/2 transform -translate-y-1/2 transition-transform duration-75"
+                style={{
+                  transform: `translateX(calc(-50% - ${spinOffset}px)) translateY(-50%)`,
+                  willChange: 'transform'
+                }}
+              >
+                {/* Repeat items for smooth infinite scroll */}
+                {crateContent && Array(10).fill(crateContent).flat().map((item: any, idx: number) => {
+                  const isCenter = Math.abs((idx * 296) - (spinOffset % (crateContent.length * 296))) < 148;
+                  return (
+                    <div 
+                      key={idx} 
+                      className={`relative p-4 rounded-lg border-2 flex-shrink-0 transition-all duration-300 ${
+                        isCenter ? 'border-yellow-400 bg-yellow-500/20 scale-110' : 
+                        winningTag && winningTag === item.tag && spinPhase === 'idle' ? 'border-yellow-400 bg-yellow-500/20' : 
+                        'border-gray-600 bg-gray-800/50 scale-95'
+                      }`} 
+                      style={{width: 280, height: 200}}
+                    >
+                      <div className="text-center h-full flex flex-col">
+                        <div className="text-lg font-bold text-white mb-2">
+                          {item.tag?.replace('inventory.weapon.', '').replace(/_/g, ' ')}
+                        </div>
+                        <div className="flex-1 flex items-center justify-center bg-gray-900/50 rounded mb-2">
+                          <img src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=120&h=120&fit=crop" alt={item.tag} className="w-30 h-30 object-contain" />
+                        </div>
+                        <div className={`text-sm font-semibold ${getRarityColor(item.rarity)}`}>
+                          {getRarityName(item.rarity)}
+                        </div>
+                      </div>
+                      {isCenter && spinPhase === 'idle' && (
+                        <div className="absolute -top-2 -right-2 bg-yellow-500 text-black px-2 py-1 rounded text-xs font-bold">
+                          Winner!
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
               </div>
-              {idx === 1 && (
-                <div className="absolute -top-2 -right-2 bg-yellow-500 text-black px-2 py-1 rounded text-xs font-bold">
-                  Default
-                </div>
-              )}
             </div>
-          ))}
+          </div>
         </div>
 
         {/* SPIN Button */}
