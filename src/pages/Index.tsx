@@ -6,28 +6,51 @@ import CrateSpinner from "@/components/OpenCrates/CrateSpinner";
 
 // Simple Modal component
 function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems, winnerIndex, crateContent, winningTag, spinReward, spinPhase, pendingReward }: any) {
-  const carouselRef = useRef<HTMLDivElement>(null);
   const [showWin, setShowWin] = useState(false);
 
-  // Animate carousel to winning item when winnerIndex changes
   useEffect(() => {
-    if (winnerIndex !== null && carouselRef.current) {
-      const cardWidth = 160; // w-40 = 10rem = 160px
-      const gap = 24; // gap-6 = 1.5rem = 24px
-      const scrollTo = (cardWidth + gap) * winnerIndex - (carouselRef.current.offsetWidth / 2) + (cardWidth / 2);
-      carouselRef.current.scrollTo({ left: scrollTo, behavior: 'smooth' });
-      // Show win message after a short delay
+    if (winnerIndex !== null) {
       setTimeout(() => setShowWin(true), 400);
     } else {
       setShowWin(false);
     }
   }, [winnerIndex]);
 
+  const getRarityColor = (rarity: number) => {
+    switch (rarity) {
+      case 1: return "border-yellow-400 bg-yellow-500/20 text-yellow-400"; // Legendary
+      case 2: return "border-purple-400 bg-purple-500/20 text-purple-400"; // Epic
+      case 3: return "border-blue-400 bg-blue-500/20 text-blue-400"; // Rare
+      case 4: return "border-green-400 bg-green-500/20 text-green-400"; // Uncommon
+      case 5: return "border-gray-400 bg-gray-500/20 text-gray-400"; // Common
+      default: return "border-gray-400 bg-gray-500/20 text-gray-400";
+    }
+  };
+
+  const getRarityName = (rarity: number) => {
+    switch (rarity) {
+      case 1: return "Legendary";
+      case 2: return "Epic";
+      case 3: return "Rare";
+      case 4: return "Uncommon";
+      case 5: return "Common";
+      default: return "Common";
+    }
+  };
+
   if (!isOpen) return null;
   
   return (
-    <div className="fixed inset-0 z-50 flex flex-col items-center justify-center bg-black bg-opacity-95 backdrop-blur-sm w-screen h-screen overflow-y-auto">
-      <div className="relative w-full h-full flex flex-col">
+    <div className="fixed inset-0 z-50 bg-black w-screen h-screen overflow-y-auto" style={{
+      background: 'linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 50%, #0f0f0f 100%)',
+      backgroundImage: `
+        radial-gradient(circle at 20% 20%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(168, 85, 247, 0.1) 0%, transparent 50%),
+        linear-gradient(45deg, transparent 48%, rgba(59, 130, 246, 0.05) 49%, rgba(59, 130, 246, 0.05) 51%, transparent 52%)
+      `,
+      backgroundSize: '100% 100%, 100% 100%, 40px 40px'
+    }}>
+      <div className="relative w-full h-full flex flex-col text-white">
         {/* Close button */}
         <button
           className="absolute top-8 right-12 text-gray-400 hover:text-white text-4xl font-bold z-20"
@@ -35,65 +58,103 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
         >
           ×
         </button>
-        {/* Crate Content Thumbnails */}
-        <div className="w-full flex flex-col items-center pt-12 pb-4">
-          <h2 className="text-2xl font-bold mb-2 text-center tracking-wide">Crate Content</h2>
-          <div className="flex flex-wrap justify-center gap-3 max-w-5xl mx-auto">
-            {crateContent && crateContent.length > 0 ? crateContent.map((item: any, idx: number) => (
-              <div key={idx} className={`flex flex-col items-center p-1 rounded-lg border-2 ${winningTag && winningTag === item.tag ? 'border-green-400 bg-yellow-900' : 'border-gray-700 bg-zinc-800'} transition-all duration-300`} style={{width:48, height:64}}>
-                <img src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=40&h=40&fit=crop" alt={item.tag} className="w-10 h-10" />
-                <div className="text-[10px] text-white text-center truncate w-11 mt-1">{item.tag?.replace('inventory.weapon.', '').replace(/_/g, ' ')}</div>
+        
+        {/* Header */}
+        <div className="text-center pt-12 pb-8">
+          <h1 className="text-4xl font-bold text-white mb-2">HOSTILE LEGACY BOX</h1>
+        </div>
+
+        {/* Featured Items (Top 3) */}
+        <div className="flex justify-center gap-8 mb-12">
+          {crateContent && crateContent.slice(0, 3).map((item: any, idx: number) => (
+            <div key={idx} className={`relative p-4 rounded-lg border-2 ${winningTag && winningTag === item.tag ? 'border-yellow-400 bg-yellow-500/20' : 'border-gray-600 bg-gray-800/50'} transition-all duration-300`} style={{width: 280, height: 200}}>
+              <div className="text-center h-full flex flex-col">
+                <div className="text-lg font-bold text-white mb-2">
+                  {item.tag?.replace('inventory.weapon.', '').replace(/_/g, ' ')}
+                </div>
+                <div className="flex-1 flex items-center justify-center bg-gray-900/50 rounded mb-2">
+                  <img src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=120&h=120&fit=crop" alt={item.tag} className="w-30 h-30 object-contain" />
+                </div>
+                <div className={`text-sm font-semibold ${getRarityColor(item.rarity)}`}>
+                  {getRarityName(item.rarity)}
+                </div>
               </div>
-            )) : <div className="text-white">Loading...</div>}
+              {idx === 1 && (
+                <div className="absolute -top-2 -right-2 bg-yellow-500 text-black px-2 py-1 rounded text-xs font-bold">
+                  Default
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+
+        {/* SPIN Button */}
+        <div className="flex justify-center mb-8">
+          <div className="relative">
+            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+              <div className="w-0 h-0 border-l-4 border-r-4 border-b-6 border-transparent border-b-yellow-400"></div>
+            </div>
+            <button
+              className="px-20 py-4 bg-yellow-600 hover:bg-yellow-700 rounded-lg font-bold text-2xl disabled:opacity-60 shadow-lg transition-all duration-200"
+              onClick={onSpin}
+              disabled={spinning || winnerIndex !== null}
+            >
+              {spinning ? 'Spinning...' : 'SPIN'}
+            </button>
           </div>
         </div>
-        {/* Carousel Animation */}
-        <div className="flex-1 flex flex-col items-center justify-center min-h-[400px]">
-          <div className="w-full flex justify-center items-center">
-            <div
-              ref={carouselRef}
-              className="overflow-x-auto w-[1200px] h-[220px] bg-zinc-800 rounded-2xl border-8 border-yellow-400 flex items-center relative scrollbar-hide shadow-2xl"
-              style={{ scrollBehavior: 'smooth' }}
-            >
-              <div className="flex gap-6 w-fit h-full items-center px-16">
-                {carouselItems && carouselItems.length > 0 ? (
-                  carouselItems.map((item: any, idx: number) => (
-                    <div
-                      key={idx}
-                      className={`w-40 h-40 flex items-center justify-center rounded-2xl transition-all duration-300 ${winnerIndex === idx ? 'border-8 border-green-400 bg-yellow-900 shadow-2xl scale-125' : 'border-4 border-gray-700 bg-zinc-900'}`}
-                      style={winnerIndex === idx ? { boxShadow: '0 0 64px 16px #facc15' } : {}}
-                    >
-                      <img src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=120&h=120&fit=crop" alt={item.tag} className="w-30 h-30" />
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-white">Loading...</div>
+
+        {/* Info Text */}
+        <div className="text-center mb-6">
+          <div className="flex items-center justify-center gap-2 text-gray-300">
+            <div className="w-4 h-4 rounded-full border border-gray-400 flex items-center justify-center">
+              <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+            </div>
+            <span>By opening this set, you will receive one of these items.</span>
+          </div>
+        </div>
+
+        {/* All Items Grid */}
+        <div className="flex-1 px-8 pb-8">
+          <div className="grid grid-cols-5 gap-4 max-w-6xl mx-auto">
+            {crateContent && crateContent.map((item: any, idx: number) => (
+              <div key={idx} className={`relative p-3 rounded-lg border-2 ${winningTag && winningTag === item.tag ? 'border-yellow-400 bg-yellow-500/20' : 'border-gray-600 bg-gray-800/50'} transition-all duration-300`}>
+                <div className="text-center">
+                  <div className="w-16 h-16 mx-auto mb-2 bg-gray-900/50 rounded flex items-center justify-center">
+                    <img src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=48&h=48&fit=crop" alt={item.tag} className="w-12 h-12 object-contain" />
+                  </div>
+                  <div className="text-xs font-bold text-white mb-1">
+                    {item.tag?.replace('inventory.weapon.', '').replace(/_/g, ' ')}
+                  </div>
+                  <div className={`text-xs font-semibold ${getRarityColor(item.rarity)}`}>
+                    {getRarityName(item.rarity)}
+                  </div>
+                </div>
+                {winningTag && winningTag === item.tag && (
+                  <div className="absolute -top-1 -right-1 w-6 h-6 bg-yellow-400 rounded-full flex items-center justify-center">
+                    <span className="text-black text-xs font-bold">!</span>
+                  </div>
                 )}
               </div>
-              {/* Winner highlight overlay */}
-              <div className="absolute left-1/2 top-0 -translate-x-1/2 w-40 h-full border-l-8 border-r-8 border-yellow-400 pointer-events-none" style={{zIndex: 10}}></div>
+            ))}
+          </div>
+        </div>
+
+        {/* Winner Message */}
+        {showWin && spinReward && (
+          <div className="fixed inset-0 flex items-center justify-center bg-black/80 z-30">
+            <div className="text-center animate-bounce">
+              <div className="text-6xl mb-4">🎉</div>
+              <div className="text-4xl font-bold text-green-400 mb-2">Congratulations!</div>
+              <div className="text-2xl font-bold text-yellow-300 mb-4">
+                You won: {spinReward.tag?.replace('inventory.weapon.', '').replace(/_/g, ' ')}
+              </div>
+              <div className="text-lg text-gray-300">
+                Check your inventory to view this item in game
+              </div>
             </div>
           </div>
-          {/* SPIN button */}
-          <button
-            className="mt-12 px-16 py-6 bg-yellow-600 rounded-2xl hover:bg-yellow-700 font-bold text-3xl disabled:opacity-60 shadow-lg"
-            onClick={onSpin}
-            disabled={spinning || winnerIndex !== null}
-          >
-            {spinning ? 'Spinning...' : 'SPIN'}
-          </button>
-          {/* Victory animation/message */}
-          {showWin && spinReward && (
-            <div className="mt-10 flex flex-col items-center animate-bounce">
-              <div className="text-5xl mb-2">🎉</div>
-              <div className="text-3xl font-bold text-green-400 mb-2 animate-pulse">Hurray! You win:</div>
-              <div className="text-2xl font-bold text-yellow-300 animate-fade-in">
-                {spinReward.tag?.replace('inventory.weapon.', '').replace(/_/g, ' ')}
-              </div>
-              <div className="text-3xl font-bold text-green-400 mb-2 animate-pulse">Check Your inventory to view this item in a game</div>
-            </div>
-          )}
-        </div>
+        )}
       </div>
     </div>
   );
