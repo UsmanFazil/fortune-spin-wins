@@ -43,10 +43,8 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
   useEffect(() => {
     if (spinPhase === 'stopping' && winningTag) {
       const winnerItemIndex = crateContent?.findIndex((item: any) => item.tag === winningTag) || 0;
-      // Use responsive calculations
-      const baseItemWidth = typeof window !== 'undefined' && window.innerWidth < 640 ? 208 : window.innerWidth < 768 ? 248 : 280;
-      const baseGap = typeof window !== 'undefined' && window.innerWidth < 640 ? 8 : window.innerWidth < 768 ? 16 : 32;
-      const itemWidth = baseItemWidth + baseGap;
+      // Use consistent responsive calculations
+      const itemWidth = window.innerWidth < 640 ? 208 : window.innerWidth < 768 ? 248 : 288;
       const targetOffset = winnerItemIndex * itemWidth;
       const currentOffset = spinOffset;
       const distance = targetOffset - (currentOffset % (crateContent?.length * itemWidth || itemWidth));
@@ -168,11 +166,11 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
         </div>
 
         {/* Featured Items (Top 3) - Spinning Carousel */}
-        <div className="relative overflow-hidden mb-8 px-4">
+        <div className="relative mb-8 px-4">
           <div className="flex justify-center">
-            <div className="relative w-full max-w-[900px] h-[200px] sm:h-[220px] overflow-hidden">
+            <div className="relative w-full max-w-[900px] min-h-[240px] flex items-center justify-center">
               {/* Center highlight box - responsive */}
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[clamp(200px,30vw,280px)] h-[clamp(160px,25vh,200px)] border-4 border-yellow-400 rounded-lg bg-yellow-400/10 z-10 pointer-events-none"></div>
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[200px] sm:w-[240px] md:w-[280px] h-[180px] sm:h-[200px] md:h-[220px] border-4 border-yellow-400 rounded-lg bg-yellow-400/10 z-10 pointer-events-none"></div>
               
               {/* Spinning items container - showing only 3 items */}
               <div 
@@ -184,11 +182,10 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
               >
                 {/* Repeat items for smooth infinite scroll */}
                 {crateContent && Array(15).fill(crateContent).flat().map((item: any, idx: number) => {
-                  const baseItemWidth = typeof window !== 'undefined' && window.innerWidth < 640 ? 208 : window.innerWidth < 768 ? 248 : 280;
-                  const baseGap = typeof window !== 'undefined' && window.innerWidth < 640 ? 8 : window.innerWidth < 768 ? 16 : 32;
-                  const itemWidth = baseItemWidth + baseGap;
+                  // Use consistent responsive values
+                  const itemWidth = window.innerWidth < 640 ? 208 : window.innerWidth < 768 ? 248 : 288;
                   const currentPosition = (idx * itemWidth) - (spinOffset % (crateContent.length * itemWidth));
-                  const visibilityRange = typeof window !== 'undefined' && window.innerWidth < 768 ? 300 : 450;
+                  const visibilityRange = window.innerWidth < 768 ? 350 : 500;
                   const isVisible = Math.abs(currentPosition) < visibilityRange;
                   
                   if (!isVisible) return null;
@@ -201,8 +198,8 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
                         'border-gray-600 bg-gray-800/50 scale-95'
                       }`} 
                       style={{
-                        width: 'clamp(200px, 30vw, 280px)',
-                        height: 'clamp(160px, 25vh, 200px)'
+                        width: window.innerWidth < 640 ? '200px' : window.innerWidth < 768 ? '240px' : '280px',
+                        height: window.innerWidth < 640 ? '180px' : window.innerWidth < 768 ? '200px' : '220px'
                       }}
                     >
                       <div className="text-center h-full flex flex-col">
@@ -210,7 +207,7 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
                           {item.tag?.replace('inventory.weapon.', '').replace(/_/g, ' ')}
                         </div>
                         <div className="flex-1 flex items-center justify-center bg-gray-900/50 rounded mb-1 sm:mb-2">
-                          <img src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=120&h=120&fit=crop" alt={item.tag} className="w-16 h-16 sm:w-20 sm:h-20 md:w-30 md:h-30 object-contain" />
+                          <img src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=120&h=120&fit=crop" alt={item.tag} className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 object-contain" />
                         </div>
                         <div className={`text-xs sm:text-sm font-semibold ${getRarityColor(item.rarity)}`}>
                           {getRarityName(item.rarity)}
