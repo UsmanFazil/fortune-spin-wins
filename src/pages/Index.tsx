@@ -84,7 +84,11 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
         {/* Featured Items (Top 3) */}
         <div className="flex justify-center gap-8 mb-12">
           {crateContent && crateContent.slice(0, 3).map((item: any, idx: number) => (
-            <div key={idx} className={`relative p-4 rounded-lg border-2 ${winningTag && winningTag === item.tag ? 'border-yellow-400 bg-yellow-500/20' : 'border-gray-600 bg-gray-800/50'} transition-all duration-300`} style={{width: 280, height: 200}}>
+            <div key={idx} className={`relative p-4 rounded-lg border-2 ${
+              idx === 1 ? 'border-yellow-400 bg-yellow-500/20' : 
+              winningTag && winningTag === item.tag ? 'border-yellow-400 bg-yellow-500/20' : 
+              'border-gray-600 bg-gray-800/50'
+            } transition-all duration-300`} style={{width: 280, height: 200}}>
               <div className="text-center h-full flex flex-col">
                 <div className="text-lg font-bold text-white mb-2">
                   {item.tag?.replace('inventory.weapon.', '').replace(/_/g, ' ')}
