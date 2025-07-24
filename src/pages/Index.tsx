@@ -91,7 +91,7 @@ export default function Home() {
         backgroundImage: `url('/lovable-uploads/f9987673-c8de-4920-b57a-f71676ddc59b.png')`,
       }}
     >
-      {/* Content - matching exact positioning from your image */}
+      {/* Content - matching exact positioning from your reference image */}
       <div className="relative z-10 px-16 py-8">
         {/* Header with CRATES title and currency - exact positioning */}
         <div className="flex items-start justify-between mb-16">
@@ -99,38 +99,44 @@ export default function Home() {
             CRATES
           </h1>
           
-          {/* Currency Display - exact styling from your image */}
+          {/* Currency Display - exact styling from your reference image */}
           <div className="flex items-center gap-4">
             {/* Silver Currency */}
             <div className="flex items-center gap-2 bg-black/80 rounded-lg px-3 py-2">
-              <div className="w-5 h-5 bg-gray-400 rounded-full"></div>
+              <div className="w-5 h-5 bg-gray-400 rounded-full border-2 border-gray-600 flex items-center justify-center">
+                <div className="w-2 h-2 bg-gray-800 rounded-full"></div>
+              </div>
               <span className="text-white text-sm font-medium">{userCurrency.silver.toLocaleString()}</span>
-              <button className="w-5 h-5 bg-green-600 rounded text-white text-xs font-bold flex items-center justify-center">
+              <button className="w-5 h-5 bg-green-600 rounded text-white text-xs font-bold flex items-center justify-center hover:bg-green-700">
                 +
               </button>
             </div>
 
             {/* Gold Currency */}
             <div className="flex items-center gap-2 bg-black/80 rounded-lg px-3 py-2 border border-yellow-600/50">
-              <div className="w-5 h-5 bg-yellow-500 rounded-full"></div>
+              <div className="w-5 h-5 bg-yellow-500 rounded-full border-2 border-yellow-600 flex items-center justify-center">
+                <span className="text-yellow-900 text-xs font-bold">$</span>
+              </div>
               <span className="text-white text-sm font-medium">{userCurrency.gold.toLocaleString()}</span>
-              <button className="w-5 h-5 bg-green-600 rounded text-white text-xs font-bold flex items-center justify-center">
+              <button className="w-5 h-5 bg-green-600 rounded text-white text-xs font-bold flex items-center justify-center hover:bg-green-700">
                 +
               </button>
             </div>
 
             {/* Premium Currency */}
             <div className="flex items-center gap-2 bg-black/80 rounded-lg px-3 py-2 border border-blue-600/50">
-              <div className="w-5 h-5 bg-blue-500 rounded-full"></div>
+              <div className="w-5 h-5 bg-blue-500 rounded-full border-2 border-blue-600 flex items-center justify-center">
+                <span className="text-blue-900 text-xs font-bold">♦</span>
+              </div>
               <span className="text-white text-sm font-medium">{userCurrency.premium.toLocaleString()}</span>
-              <button className="w-5 h-5 bg-green-600 rounded text-white text-xs font-bold flex items-center justify-center">
+              <button className="w-5 h-5 bg-green-600 rounded text-white text-xs font-bold flex items-center justify-center hover:bg-green-700">
                 +
               </button>
             </div>
           </div>
         </div>
 
-        {/* Tab Navigation - exact styling from your image */}
+        {/* Tab Navigation - exact styling from your reference image */}
         <div className="flex gap-0 mb-12">
           {tabs.map((tab) => (
             <button
@@ -147,7 +153,7 @@ export default function Home() {
           ))}
         </div>
 
-        {/* Crates Grid - EXACT 2x4 layout matching your image */}
+        {/* Crates Grid - EXACT 2x4 layout matching your reference image */}
         <div className="grid grid-cols-4 grid-rows-2 gap-8 max-w-7xl">
           {filteredCrates.map((crate) => (
             <div 
@@ -175,11 +181,14 @@ export default function Home() {
                     src={crate.image}
                     alt={crate.name}
                     className="w-full h-full object-contain"
+                    onError={(e) => {
+                      console.error("Failed to load crate image:", crate.image);
+                    }}
                   />
                   
-                  {/* Price box - EXACT positioning and styling from your image */}
+                  {/* Price box - EXACT positioning and styling from your reference image */}
                   <div className="absolute bottom-0 right-0 bg-yellow-600 text-black rounded-sm px-3 py-2 flex items-center gap-2 border-2 border-yellow-500">
-                    <div className="w-4 h-4 bg-gray-400 rounded-full flex items-center justify-center">
+                    <div className="w-4 h-4 bg-gray-400 rounded-full border border-gray-600 flex items-center justify-center">
                       <div className="w-2 h-2 bg-gray-800 rounded-full"></div>
                     </div>
                     <span className="text-sm font-bold">{crate.price}</span>
@@ -192,7 +201,7 @@ export default function Home() {
 
         {/* Navigation Arrow - exact positioning */}
         <div className="fixed bottom-8 left-8">
-          <button className="flex items-center justify-center text-white bg-black/60 rounded-lg p-4 border border-gray-600">
+          <button className="flex items-center justify-center text-white bg-black/60 rounded-lg p-4 border border-gray-600 hover:bg-black/80 transition-colors">
             <ArrowLeft className="h-6 w-6" />
           </button>
         </div>
