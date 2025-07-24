@@ -66,14 +66,25 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
   useEffect(() => {
     if (spinPhase === 'stopping' && winningTag && crateContent && crateContent.length > 0) {
       const itemWidth = getItemWidth();
-      const winnerItemIndex = crateContent.findIndex((item: any) => item.tag === winningTag) || 0;
-      const targetOffset = winnerItemIndex * itemWidth;
+      const winnerItemIndex = crateContent.findIndex((item: any) => item.tag === winningTag);
+      
+      if (winnerItemIndex === -1) {
+        console.error('Winner item not found in crate content');
+        return;
+      }
+      
+      // Calculate the target position to center the winning item
+      const targetPosition = winnerItemIndex * itemWidth;
       const currentOffset = spinOffset;
-      const distance = targetOffset - (currentOffset % (crateContent.length * itemWidth));
-      const finalOffset = currentOffset + distance + (crateContent.length * itemWidth * 3); // Add extra spins
-      const duration = 2000; // 2 seconds deceleration
+      
+      // Add multiple full rotations plus the target position
+      const extraSpins = crateContent.length * itemWidth * 5; // 5 full rotations
+      const finalOffset = currentOffset + extraSpins + (targetPosition - (currentOffset % (crateContent.length * itemWidth)));
+      
+      const duration = 2500; // 2.5 seconds deceleration
       const startTime = performance.now();
       const startOffset = currentOffset;
+      
       const animate = (now: number) => {
         const elapsed = now - startTime;
         const progress = Math.min(elapsed / duration, 1);
@@ -81,13 +92,13 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
         const easeOut = 1 - Math.pow(1 - progress, 3);
         const currentAnimOffset = startOffset + (finalOffset - startOffset) * easeOut;
         setSpinOffset(currentAnimOffset);
+        
         if (progress < 1) {
           animationRef.current = requestAnimationFrame(animate);
-        } else {
-          setTimeout(() => setShowWin(true), 300);
         }
       };
       animationRef.current = requestAnimationFrame(animate);
+      
       return () => {
         if (animationRef.current) {
           cancelAnimationFrame(animationRef.current);
@@ -166,12 +177,13 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
   const itemWidth = 288;
   const totalItems = crateContent.length;
 
-  // Ensure we have enough items to avoid blank spaces
-  if (totalItems === 0) return null;
-
+  // Calculate center offset to properly align items
+  const centerOffset = itemWidth / 2;
+  const adjustedSpinOffset = spinOffset - centerOffset;
+  
   // Number of virtual items around the center to render
-  const buffer = 15; // Reduced buffer to avoid overflow issues
-  const centerVirtualIndex = Math.floor(spinOffset / itemWidth);
+  const buffer = 12;
+  const centerVirtualIndex = Math.floor(adjustedSpinOffset / itemWidth);
   const start = centerVirtualIndex - buffer;
   const end = centerVirtualIndex + buffer;
 
@@ -183,12 +195,12 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
     
     // Safety check for undefined items
     if (!item || !item.tag) {
-      console.warn(`Missing item at virtualIndex: ${virtualIndex}, realIndex: ${realIndex}, totalItems: ${totalItems}`);
       return null;
     }
     
-    const currentPosition = (virtualIndex * itemWidth) - spinOffset;
-    const isCentered = Math.abs(currentPosition) < 10;
+    const itemPosition = virtualIndex * itemWidth;
+    const distanceFromCenter = Math.abs(itemPosition - adjustedSpinOffset);
+    const isCentered = distanceFromCenter < (itemWidth / 2);
 
     return (
       <div 
@@ -210,7 +222,6 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
               className="w-30 h-30 object-contain"
               style={{ width: 120, height: 120 }}
               onError={(e) => {
-                console.error('Image failed to load:', item.tag);
                 e.currentTarget.src = "https://images.unsplash.com/photo-1518770660439-4636190af475?w=120&h=120&fit=crop";
               }}
             />
@@ -222,7 +233,7 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
         )}
       </div>
     );
-  }).filter(Boolean); // Remove null items
+  }).filter(Boolean);
 })()}
 
                 
@@ -264,25 +275,7 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
             ))}
           </div>
         </div>
-        {showWin && spinReward && (
-          <div className="fixed inset-0 flex items-center justify-center bg-black/80 z-30">
-            <div className="text-center animate-bounce">
-              <div className="text-6xl mb-4">🎉</div>
-              <div className="text-4xl font-bold text-green-400 mb-2">Congratulations!</div>
-              <div className="text-2xl font-bold text-yellow-300 mb-4">You won: {spinReward.tag?.replace('inventory.weapon.', '').replace(/_/g, ' ')}</div>
-              <div className="text-lg text-gray-300 mb-6">Check your inventory to view this item in game</div>
-              <button
-                className="mt-4 px-8 py-3 bg-yellow-500 hover:bg-yellow-600 text-black font-bold rounded-lg text-lg shadow-lg transition-all duration-200"
-                onClick={() => {
-                  setShowWin(false);
-                  onClose();
-                }}
-              >
-                OK
-              </button>
-            </div>
-          </div>
-        )}
+        {/* Removed congratulations popup */}
       </div>
     </div>
   );
