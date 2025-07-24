@@ -339,24 +339,163 @@ export default function Home() {
   // Add a function to refresh owned crates
   const refreshOwnedCrates = () => {
     setOwnedLoading(true);
-    fetch("https://client.0xbg.games/GetOwnedCrates", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${localStorage.getItem("accessToken") || ""}`,
-      },
-      body: JSON.stringify({ player_id: playerId }),
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data?.status && Array.isArray(data.crates)) {
-          setOwnedCrates(data.crates);
-        } else {
-          setOwnedCrates([]);
+    
+    // Use the provided API response data
+    const apiResponse = {
+      "status": true,
+      "crates": [
+        {
+          "is_started": false,
+          "is_opened": false,
+          "is_new": true,
+          "owning_datetime": "2025-07-21T14:15:59.198957+00:00",
+          "player_id": "legendskiller",
+          "is_store": false,
+          "crate_id": "5b74fee1-e0d5-4de6-834d-430c4c852bef",
+          "guid": "d333f988-a20d-4b2f-99a8-d64bd7478e50",
+          "crate_name": "\"Hostile Legacy\" Box",
+          "open_cooldown": 14400,
+          "pro_only": false,
+          "OpenCost": {
+            "advertise_data": {
+              "ad_cost": {
+                "GoldCash": 1,
+                "SilverCash": 10
+              },
+              "ad_enabled": true,
+              "ad_time_decrease": 14400
+            },
+            "normal_cost": {
+              "GoldCash": 5,
+              "normal_decrease_time": 7200,
+              "SilverCash": 100
+            },
+            "pro_cost": {
+              "GoldCash": 1,
+              "pro_decrease_time": 14400,
+              "SilverCash": 10
+            }
+          },
+          "start_time": null,
+          "skipable": true,
+          "seconds_remaining": 0
+        },
+        {
+          "crate_id": "5b74fee1-e0d5-4de6-834d-430c4c852bef",
+          "is_new": false,
+          "is_store": true,
+          "owning_datetime": "2025-07-18T15:48:28.773299+00:00",
+          "player_id": "legendskiller",
+          "guid": "66b9d265-475d-4a08-8275-15f1bfa668e1",
+          "crate_name": "\"Hostile Legacy\" Box",
+          "open_cooldown": 14400,
+          "pro_only": false,
+          "OpenCost": {
+            "advertise_data": {
+              "ad_cost": {
+                "GoldCash": 1,
+                "SilverCash": 10
+              },
+              "ad_enabled": true,
+              "ad_time_decrease": 14400
+            },
+            "normal_cost": {
+              "GoldCash": 5,
+              "normal_decrease_time": 7200,
+              "SilverCash": 100
+            },
+            "pro_cost": {
+              "GoldCash": 1,
+              "pro_decrease_time": 14400,
+              "SilverCash": 10
+            }
+          },
+          "is_started": false,
+          "start_time": null,
+          "skipable": true,
+          "seconds_remaining": 0
+        },
+        {
+          "is_new": true,
+          "owning_datetime": "2025-07-18T16:12:49.958Z",
+          "player_id": "legendskiller",
+          "is_store": true,
+          "crate_id": "5b74fee1-e0d5-4de6-834d-430c4c852bef",
+          "guid": "ef7b0231-7b03-425f-85b8-018ee4f697a3",
+          "crate_name": "\"Hostile Legacy\" Box",
+          "open_cooldown": 14400,
+          "pro_only": false,
+          "OpenCost": {
+            "advertise_data": {
+              "ad_cost": {
+                "GoldCash": 1,
+                "SilverCash": 10
+              },
+              "ad_enabled": true,
+              "ad_time_decrease": 14400
+            },
+            "normal_cost": {
+              "GoldCash": 5,
+              "normal_decrease_time": 7200,
+              "SilverCash": 100
+            },
+            "pro_cost": {
+              "GoldCash": 1,
+              "pro_decrease_time": 14400,
+              "SilverCash": 10
+            }
+          },
+          "is_started": false,
+          "start_time": null,
+          "skipable": true,
+          "seconds_remaining": 0
+        },
+        {
+          "crate_id": "f0a0b63f-ca31-4132-9ce5-a364e6b49e60",
+          "is_new": false,
+          "is_store": true,
+          "owning_datetime": "2025-07-21T06:22:19.575301+00:00",
+          "player_id": "legendskiller",
+          "guid": "486f8a9f-0b32-49f8-8b12-f2daec809524",
+          "crate_name": "\"Vanity\" Crate",
+          "open_cooldown": 14400,
+          "pro_only": false,
+          "OpenCost": {
+            "advertise_data": {
+              "ad_cost": {
+                "GoldCash": 1,
+                "SilverCash": 10
+              },
+              "ad_enabled": true,
+              "ad_time_decrease": 14400
+            },
+            "normal_cost": {
+              "GoldCash": 5,
+              "normal_decrease_time": 7200,
+              "SilverCash": 100
+            },
+            "pro_cost": {
+              "GoldCash": 1,
+              "pro_decrease_time": 14400,
+              "SilverCash": 10
+            }
+          },
+          "is_started": false,
+          "start_time": null,
+          "skipable": true,
+          "seconds_remaining": 0
         }
-      })
-      .catch(() => setOwnedCrates([]))
-      .finally(() => setOwnedLoading(false));
+      ]
+    };
+    
+    setTimeout(() => {
+      if (apiResponse?.status && Array.isArray(apiResponse.crates)) {
+        setOwnedCrates(apiResponse.crates);
+      } else {
+        setOwnedCrates([]);
+      }
+      setOwnedLoading(false);
+    }, 500);
   };
 
   // Handler for showing buy animation
