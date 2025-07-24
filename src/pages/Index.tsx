@@ -83,7 +83,7 @@ export default function Home() {
     <div 
       className="min-h-screen bg-cover bg-center bg-no-repeat text-white font-inter relative"
       style={{
-        backgroundImage: `linear-gradient(rgba(0,0,0,0.4), rgba(0,0,0,0.4)), url('/lovable-uploads/c2b07524-8162-41dd-8c47-2dc563708e26.png')`,
+        backgroundImage: `url('/lovable-uploads/381f82d6-3bc3-46ad-937d-36de1b1396e8.png')`,
       }}
     >
       {/* Content - matching exact positioning from your image */}
