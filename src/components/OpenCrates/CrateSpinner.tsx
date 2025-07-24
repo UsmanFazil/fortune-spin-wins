@@ -1,8 +1,9 @@
 import React, { useEffect, useRef, useState } from "react";
 
-const CARD_WIDTH = 160; // Reduced width for more items visible
-const CARD_MARGIN = 8; // Margin between cards
+const CARD_WIDTH = 200; // Large casino-style cards
+const CARD_MARGIN = 20; // More spacing between cards
 const TOTAL_CARD_WIDTH = CARD_WIDTH + CARD_MARGIN * 2;
+const VISIBLE_CARDS = 3; // Only show 3 cards like casino games
 
 interface CrateItem {
   tag: string;
@@ -34,7 +35,7 @@ const CrateSpinner: React.FC<CrateSpinnerProps> = ({
   const animationRef = useRef<number>();
   
   // Create many repeated items for smooth infinite scroll effect
-  const repeatedContent = Array(20).fill(content).flat(); // More repetitions for longer spin
+  const repeatedContent = Array(30).fill(content).flat(); // More repetitions for longer spin
   
   // Find a random reward position in the later cycles to ensure long spin
   const getRandomRewardPosition = () => {
@@ -94,7 +95,7 @@ const CrateSpinner: React.FC<CrateSpinnerProps> = ({
       if (targetIndex === -1) return;
       
       const containerWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
-      const centerOffset = containerWidth / 2 - TOTAL_CARD_WIDTH / 2;
+      const centerOffset = containerWidth / 2 - CARD_WIDTH / 2;
       const targetOffset = targetIndex * TOTAL_CARD_WIDTH - centerOffset;
       
       const startOffset = currentOffset;
@@ -170,62 +171,76 @@ const CrateSpinner: React.FC<CrateSpinnerProps> = ({
     }
   };
 
+  // Calculate which card is in the center
+  const containerWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
+  const centerOffset = containerWidth / 2;
+  const centerCardIndex = Math.round((currentOffset + centerOffset) / TOTAL_CARD_WIDTH);
+
   return (
-    <div className="relative w-full h-48 overflow-hidden bg-gradient-to-b from-gray-800 to-gray-900 rounded-xl border-4 border-yellow-500/50 shadow-2xl">
-      {/* Slot machine style borders */}
-      <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/20 via-transparent to-yellow-500/20 pointer-events-none"></div>
-      
-      {/* Center winning indicator */}
-      <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-1 h-full bg-gradient-to-b from-yellow-400 to-yellow-600 shadow-xl z-10 pointer-events-none">
-        <div className="absolute top-4 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-yellow-400 rounded-full shadow-lg animate-pulse"></div>
-        <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 w-4 h-4 bg-yellow-400 rounded-full shadow-lg animate-pulse"></div>
-      </div>
+    <div className="relative w-full h-64 overflow-hidden bg-gradient-to-b from-gray-900 to-black rounded-xl shadow-2xl">
+      {/* Casino-style frame */}
+      <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 via-transparent to-yellow-500/10 pointer-events-none"></div>
       
       {/* Spinning items container */}
       <div
         ref={containerRef}
-        className="flex h-full items-center"
+        className="flex h-full items-center justify-center"
         style={{ willChange: "transform" }}
       >
         {repeatedContent.map((item, idx) => {
           const isWinning = winningIndex === idx && spinPhase === 'idle';
+          const isCenterCard = Math.abs(centerCardIndex - idx) === 0 && spinPhase !== 'idle';
+          
           return (
             <div 
-              key={idx} 
-              className={`flex-shrink-0 mx-2 h-40 transition-all duration-300 ${
-                isWinning ? 'scale-110 drop-shadow-2xl' : ''
+              key={`${item.material_id || item.tag}-${idx}`} 
+              className={`flex-shrink-0 h-56 transition-all duration-500 ${
+                isWinning ? 'scale-110 drop-shadow-2xl' : isCenterCard ? 'scale-105' : ''
               }`}
-              style={{ width: `${CARD_WIDTH}px` }}
+              style={{ 
+                width: `${CARD_WIDTH}px`,
+                margin: `0 ${CARD_MARGIN}px`
+              }}
             >
               <div className={`
-                relative h-full rounded-lg p-3 border-2 transition-all duration-300 ${getRarityColor(item.rarity)}
-                ${isWinning ? 'border-yellow-400 bg-yellow-900/40 shadow-yellow-400/50 shadow-xl animate-pulse' : ''}
+                relative h-full rounded-xl p-4 border-3 transition-all duration-500 ${getRarityColor(item.rarity)}
+                ${isWinning ? 'border-yellow-400 bg-yellow-900/40 shadow-yellow-400/50 shadow-2xl animate-pulse ring-4 ring-yellow-400/50' : ''}
+                ${isCenterCard ? 'border-white/50 bg-white/5 shadow-lg' : ''}
               `}>
                 {/* Winning glow effect */}
                 {isWinning && (
-                  <div className="absolute inset-0 bg-yellow-400/20 rounded-lg animate-pulse"></div>
+                  <div className="absolute inset-0 bg-yellow-400/20 rounded-xl animate-pulse"></div>
+                )}
+                
+                {/* Center card highlight */}
+                {isCenterCard && (
+                  <div className="absolute inset-0 bg-white/10 rounded-xl"></div>
                 )}
                 
                 <div className="relative text-center h-full flex flex-col justify-center">
-                  <div className="w-20 h-20 mx-auto mb-2 bg-gray-800/80 rounded-lg flex items-center justify-center backdrop-blur-sm">
+                  <div className="w-32 h-32 mx-auto mb-3 bg-gray-800/80 rounded-xl flex items-center justify-center backdrop-blur-sm">
                     {item.image ? (
                       <img 
                         src={item.image}
                         alt="Weapon" 
-                        className="w-16 h-16 object-contain"
+                        className="w-28 h-28 object-contain"
+                        onError={(e) => {
+                          const target = e.target as HTMLImageElement;
+                          target.src = "https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=112&h=112&fit=crop";
+                        }}
                       />
                     ) : (
                       <img 
-                        src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=64&h=64&fit=crop"
+                        src="https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=112&h=112&fit=crop"
                         alt="Weapon" 
-                        className="w-16 h-16 object-contain"
+                        className="w-28 h-28 object-contain"
                       />
                     )}
                   </div>
-                  <div className={`font-bold text-xs ${getRarityColor(item.rarity).replace('border-', 'text-').replace('bg-', '').replace('/20', '')}`}>
+                  <div className={`font-bold text-sm mb-1 ${getRarityColor(item.rarity).replace('border-', 'text-').replace('bg-', '').replace('/20', '')}`}>
                     {getRarityName(item.rarity)}
                   </div>
-                  <div className="text-xs text-gray-300 mt-1 truncate px-1">
+                  <div className="text-sm text-gray-300 truncate px-2 font-medium">
                     {item.tag.replace('inventory.weapon.', '').replace(/_/g, ' ')}
                   </div>
                 </div>
@@ -235,9 +250,9 @@ const CrateSpinner: React.FC<CrateSpinnerProps> = ({
         })}
       </div>
       
-      {/* Side fade effects for slot machine feel */}
-      <div className="absolute left-0 top-0 w-20 h-full bg-gradient-to-r from-gray-900 to-transparent pointer-events-none z-5"></div>
-      <div className="absolute right-0 top-0 w-20 h-full bg-gradient-to-l from-gray-900 to-transparent pointer-events-none z-5"></div>
+      {/* Side fade effects for casino feel */}
+      <div className="absolute left-0 top-0 w-32 h-full bg-gradient-to-r from-gray-900 via-gray-900/80 to-transparent pointer-events-none z-10"></div>
+      <div className="absolute right-0 top-0 w-32 h-full bg-gradient-to-l from-gray-900 via-gray-900/80 to-transparent pointer-events-none z-10"></div>
     </div>
   );
 };
