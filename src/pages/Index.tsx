@@ -99,13 +99,15 @@ export default function Home() {
             CRATES
           </h1>
           
-          {/* Currency Display - exact styling from your reference image */}
+          {/* Currency Display - using new thumbnail icons */}
           <div className="flex items-center gap-4">
             {/* Silver Currency */}
             <div className="flex items-center gap-2 bg-black/80 rounded-lg px-3 py-2">
-              <div className="w-5 h-5 bg-gray-400 rounded-full border-2 border-gray-600 flex items-center justify-center">
-                <div className="w-2 h-2 bg-gray-800 rounded-full"></div>
-              </div>
+              <img 
+                src="/lovable-uploads/428df05c-38d0-45a2-9460-a7b60e4421c3.png" 
+                alt="Silver currency" 
+                className="w-5 h-5 object-contain"
+              />
               <span className="text-white text-sm font-medium">{userCurrency.silver.toLocaleString()}</span>
               <button className="w-5 h-5 bg-green-600 rounded text-white text-xs font-bold flex items-center justify-center hover:bg-green-700">
                 +
@@ -114,9 +116,11 @@ export default function Home() {
 
             {/* Gold Currency */}
             <div className="flex items-center gap-2 bg-black/80 rounded-lg px-3 py-2 border border-yellow-600/50">
-              <div className="w-5 h-5 bg-yellow-500 rounded-full border-2 border-yellow-600 flex items-center justify-center">
-                <span className="text-yellow-900 text-xs font-bold">$</span>
-              </div>
+              <img 
+                src="/lovable-uploads/547bb319-869e-4942-ac3b-c63e122319c2.png" 
+                alt="Gold currency" 
+                className="w-5 h-5 object-contain"
+              />
               <span className="text-white text-sm font-medium">{userCurrency.gold.toLocaleString()}</span>
               <button className="w-5 h-5 bg-green-600 rounded text-white text-xs font-bold flex items-center justify-center hover:bg-green-700">
                 +
@@ -125,9 +129,11 @@ export default function Home() {
 
             {/* Premium Currency */}
             <div className="flex items-center gap-2 bg-black/80 rounded-lg px-3 py-2 border border-blue-600/50">
-              <div className="w-5 h-5 bg-blue-500 rounded-full border-2 border-blue-600 flex items-center justify-center">
-                <span className="text-blue-900 text-xs font-bold">♦</span>
-              </div>
+              <img 
+                src="/lovable-uploads/82737bb3-3249-4830-bebe-e7eb5f55e420.png" 
+                alt="Premium currency" 
+                className="w-5 h-5 object-contain"
+              />
               <span className="text-white text-sm font-medium">{userCurrency.premium.toLocaleString()}</span>
               <button className="w-5 h-5 bg-green-600 rounded text-white text-xs font-bold flex items-center justify-center hover:bg-green-700">
                 +
