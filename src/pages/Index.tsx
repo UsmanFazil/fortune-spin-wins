@@ -162,29 +162,37 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
                 }}
               >
               
-              {crateContent && (() => {
+              {crateContent && crateContent.length > 0 && (() => {
   const itemWidth = 288;
   const totalItems = crateContent.length;
 
+  // Ensure we have enough items to avoid blank spaces
+  if (totalItems === 0) return null;
+
   // Number of virtual items around the center to render
-  const buffer = 20; // 40 total rendered items (20 left + 20 right)
+  const buffer = 15; // Reduced buffer to avoid overflow issues
   const centerVirtualIndex = Math.floor(spinOffset / itemWidth);
   const start = centerVirtualIndex - buffer;
   const end = centerVirtualIndex + buffer;
 
   return Array.from({ length: end - start + 1 }, (_, i) => {
     const virtualIndex = start + i;
+    // Safe modulo calculation to ensure positive indices
     const realIndex = ((virtualIndex % totalItems) + totalItems) % totalItems;
     const item = crateContent[realIndex];
+    
+    // Safety check for undefined items
+    if (!item || !item.tag) {
+      console.warn(`Missing item at virtualIndex: ${virtualIndex}, realIndex: ${realIndex}, totalItems: ${totalItems}`);
+      return null;
+    }
+    
     const currentPosition = (virtualIndex * itemWidth) - spinOffset;
     const isCentered = Math.abs(currentPosition) < 10;
-if (!item) {
-  console.warn(`Missing item at virtualIndex: ${virtualIndex}, realIndex: ${realIndex}`);
-  return null;
-}
+
     return (
       <div 
-        key={`v${virtualIndex}-r${realIndex}`} 
+        key={`item-${virtualIndex}-${realIndex}-${item.tag}`} 
         className={`relative p-4 rounded-lg border-2 flex-shrink-0 transition-all duration-300 ${
           isCentered ? 'border-yellow-400 bg-yellow-500/20 scale-105' :
           'border-gray-600 bg-gray-800/50 scale-95'
@@ -193,19 +201,28 @@ if (!item) {
       >
         <div className="text-center h-full flex flex-col">
           <div className="text-lg font-bold text-white mb-2">
-            {item.tag?.replace('inventory.weapon.', '').replace(/_/g, ' ')}
+            {item.tag?.replace('inventory.weapon.', '').replace('inventory.vanity.', '').replace(/_/g, ' ').toUpperCase()}
           </div>
           <div className="flex-1 flex items-center justify-center bg-gray-900/50 rounded mb-2">
-            <img src={getItemImage(item.tag)} alt={item.tag} className="w-30 h-30 object-contain" style={{ width: 120, height: 120 }} />
+            <img 
+              src={getItemImage(item.tag)} 
+              alt={item.tag} 
+              className="w-30 h-30 object-contain"
+              style={{ width: 120, height: 120 }}
+              onError={(e) => {
+                console.error('Image failed to load:', item.tag);
+                e.currentTarget.src = "https://images.unsplash.com/photo-1518770660439-4636190af475?w=120&h=120&fit=crop";
+              }}
+            />
           </div>
           <div className={`text-sm font-semibold ${getRarityColor(item.rarity)}`}>{getRarityName(item.rarity)}</div>
         </div>
-        {isCentered && spinPhase === 'idle' && winningTag && (
+        {isCentered && spinPhase === 'idle' && winningTag && item.tag === winningTag && (
           <div className="absolute -top-2 -right-2 bg-yellow-500 text-black px-2 py-1 rounded text-xs font-bold">Winner!</div>
         )}
       </div>
     );
-  });
+  }).filter(Boolean); // Remove null items
 })()}
 
                 
@@ -271,41 +288,27 @@ if (!item) {
   );
 }
 
-// Helper to get item image (replace with your actual logic)
+// Simplified image helper with reliable static URLs
 function getItemImage(tag: string) {
-  try {
-    // Basic weapon image mapping - replace with actual images
-    const weaponImages: Record<string, string> = {
-      'revolver': 'https://images.unsplash.com/photo-1595590424283-b8f17842773f?w=120&h=120&fit=crop',
-      'assaultrifle': 'https://images.unsplash.com/photo-1595590424283-b8f17842773f?w=120&h=120&fit=crop',
-      'shotgun': 'https://images.unsplash.com/photo-1595590424283-b8f17842773f?w=120&h=120&fit=crop',
-      'sniperrifle': 'https://images.unsplash.com/photo-1595590424283-b8f17842773f?w=120&h=120&fit=crop',
-      'rocketlauncher': 'https://images.unsplash.com/photo-1595590424283-b8f17842773f?w=120&h=120&fit=crop',
-    };
-    
-    if (!tag) return 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=120&h=120&fit=crop';
-    
-    // Vanity/Cosmetic/Outfit support
-    if (tag.startsWith('inventory.vanity.') || tag.startsWith('inventory.outfit.') || tag.startsWith('inventory.cosmetic.')) {
-      return vanityCrateImg;
-    }
-    
-    // Weapon support
-    const match = tag.match(/^inventory\.weapon\.(.+)$/);
-    if (match) {
-      const weaponName = match[1].replace(/\./g, '').replace(/_/g, '').replace(/-/g, '');
-      return weaponImages[weaponName] || 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=120&h=120&fit=crop';
-    }
-    
-    // Fallback
-    return 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=120&h=120&fit=crop';
-  } catch {
-    return 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?w=120&h=120&fit=crop';
-  }
+  if (!tag) return "https://images.unsplash.com/photo-1518770660439-4636190af475?w=120&h=120&fit=crop";
+  
+  // Map different weapon types to different placeholder images
+  if (tag.includes('ak47')) return "https://images.unsplash.com/photo-1587385789097-0197a7fbd179?w=120&h=120&fit=crop";
+  if (tag.includes('m4a4')) return "https://images.unsplash.com/photo-1595590424283-b8f17842773f?w=120&h=120&fit=crop";
+  if (tag.includes('awp')) return "https://images.unsplash.com/photo-1510519138101-570d1dca3d66?w=120&h=120&fit=crop";
+  if (tag.includes('glock')) return "https://images.unsplash.com/photo-1544735716-392fe2489ffa?w=120&h=120&fit=crop";
+  if (tag.includes('deagle')) return "https://images.unsplash.com/photo-1595590424283-b8f17842773f?w=120&h=120&fit=crop";
+  if (tag.includes('revolver')) return "https://images.unsplash.com/photo-1510519138101-570d1dca3d66?w=120&h=120&fit=crop";
+  
+  // Vanity items
+  if (tag.includes('vanity')) return "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=120&h=120&fit=crop";
+  
+  // Default fallback
+  return "https://images.unsplash.com/photo-1518770660439-4636190af475?w=120&h=120&fit=crop";
 }
 
 export default function Home() {
-  const [currentView, setCurrentView] = useState('owned'); // 'owned', 'store', 'detail', 'spinner'
+  const [currentView, setCurrentView] = useState('spinner'); // Default to spinner for demo
   const [ownedCrates, setOwnedCrates] = useState([]);
   const [ownedLoading, setOwnedLoading] = useState(true);
   const [selectedCrate, setSelectedCrate] = useState(null);
@@ -372,8 +375,24 @@ export default function Home() {
     }, 125000);
   };
 
-  // Fetch owned crates on mount or when returning to owned view
+  // Initialize mock data for demo
   useEffect(() => {
+    // Mock crate content with proper image paths
+    const mockContent = [
+      { tag: "inventory.weapon.ak47", rarity: 2, type: "Weapon" },
+      { tag: "inventory.weapon.m4a4", rarity: 3, type: "Weapon" },
+      { tag: "inventory.weapon.awp", rarity: 1, type: "Weapon" },
+      { tag: "inventory.weapon.glock", rarity: 4, type: "Weapon" },
+      { tag: "inventory.weapon.deagle", rarity: 2, type: "Weapon" },
+      { tag: "inventory.weapon.revolver", rarity: 5, type: "Weapon" },
+      { tag: "inventory.vanity.hat", rarity: 3, type: "Vanity" },
+      { tag: "inventory.vanity.shirt", rarity: 4, type: "Vanity" }
+    ];
+    
+    setOpenedCrateContent(mockContent);
+    setSelectedCrate({ guid: 'demo-crate', crate_name: 'Demo Crate' });
+    
+    // Fetch owned crates only if in owned view
     if (currentView === 'owned') {
       refreshOwnedCrates();
     }
@@ -623,74 +642,31 @@ export default function Home() {
           )
         )}
 
-        {/* Spinner View for opening owned crate */}
-        {currentView === 'spinner' && selectedCrate && (
-          <div>
+        {/* Demo Spinner View */}
+        {currentView === 'spinner' && (
+          <div className="text-center">
+            <h1 className="text-4xl mb-6">🎁 Demo Crate Spinner</h1>
             <button
-              onClick={() => setCurrentView('owned')}
-              className="mb-4 px-4 py-2 bg-red-600 rounded"
+              className="mb-8 px-8 py-4 bg-yellow-600 hover:bg-yellow-700 rounded-lg font-bold text-2xl shadow-lg transition-all duration-200"
+              onClick={() => setModalOpen(true)}
             >
-              ← Back to My Crates
+              Open Fullscreen Spinner
             </button>
-            <h1 className="text-4xl mb-6">🎁 Opening Your Crate</h1>
-            {/* You may want to fetch and show crate content here if needed */}
-            <CrateSpinner
-              content={crateContent || []}
-              spinning={spinning}
-              reward={reward}
-              onComplete={() => setSpinning(false)}
-              spinPhase={spinPhase}
-              pendingReward={pendingReward}
-            />
-            <div className="mt-6 text-center">
+            
+            <div className="mt-8">
               <button
-                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
-                onClick={async () => {
-                  if (!spinning) {
-                    setSpinning(true);
-                    // Call OpenCrate API for this crate
-                    try {
-                      const response = await fetch("https://client.0xbg.games/OpenCrate", {
-                        method: "POST",
-                        headers: {
-                          "Content-Type": "application/json",
-                          Authorization: localStorage.getItem("accessToken") || "",
-                        },
-                        body: JSON.stringify({
-                          player_id: playerId,
-                          guid: selectedCrate.guid,
-                        }),
-                      });
-                      const data = await response.json();
-                      if (data?.status && data?.data?.content) {
-                        setReward(data.data.content);
-                        
-                      } else {
-                        throw new Error("No reward returned");
-                      }
-                    } catch (err) {
-                      console.error("Error opening crate", err);
-                      setReward({
-                        tag: "inventory.weapon.revolver",
-                        rarity: 5,
-                        type: "Weapon",
-                        chance: 1,
-                        material_id: "fallback-revolver"
-                      });
-                      alert("Could not open crates from server. Showing fallback reward.");
-                    }
-                  }
-                }}
-                disabled={spinning}
+                onClick={() => setCurrentView('owned')}
+                className="px-4 py-2 bg-gray-600 rounded hover:bg-gray-700 transition-colors mr-4"
               >
-                {spinning ? "Opening..." : "Open Crate"}
+                View Owned Crates
+              </button>
+              <button
+                onClick={() => setCurrentView('store')}
+                className="px-4 py-2 bg-blue-600 rounded hover:bg-blue-700 transition-colors"
+              >
+                Visit Store
               </button>
             </div>
-            {reward && (
-              <div className="mt-6 text-2xl text-green-400 text-center">
-                🎉 You got: {reward.tag}
-              </div>
-            )}
           </div>
         )}
       </div>
