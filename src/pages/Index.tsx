@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 
-// Import the exact crate images you provided
-import woodenCrate from "@/assets/crates/wooden-crate.png"; // Your WEAPON crate
-import metalCrate from "@/assets/crates/metal-crate.png";   // Your skull crate
+// Using your exact provided crate images
+const woodenCrate = "/lovable-uploads/56177f88-ecbd-4d8c-8758-edfc4ccf5875.png"; // Your WEAPON crate
+const metalCrate = "/lovable-uploads/aa6e2032-9aaa-457e-aa07-606abfbb965e.png";   // Your skull crate
 
 const crateData = [
   {
@@ -79,6 +79,11 @@ export default function Home() {
     activeTab === "ALL" || crate.type === activeTab
   );
 
+  const handleCrateClick = (crate: any) => {
+    console.log("Crate clicked:", crate.name);
+    // Add your crate opening logic here
+  };
+
   return (
     <div 
       className="min-h-screen bg-cover bg-center bg-no-repeat text-white font-inter relative"
@@ -145,7 +150,11 @@ export default function Home() {
         {/* Crates Grid - EXACT 2x4 layout matching your image */}
         <div className="grid grid-cols-4 grid-rows-2 gap-8 max-w-7xl">
           {filteredCrates.map((crate) => (
-            <div key={crate.id} className="bg-black/60 rounded-lg overflow-hidden relative backdrop-blur-sm border border-gray-600/50">
+            <div 
+              key={crate.id} 
+              className="bg-black/60 rounded-lg overflow-hidden relative backdrop-blur-sm border border-gray-600/50 cursor-pointer hover:bg-black/70 transition-all duration-200"
+              onClick={() => handleCrateClick(crate)}
+            >
               {/* NEW Tag - exact positioning */}
               {crate.tag && (
                 <div className="absolute top-4 right-4 bg-yellow-500 text-black text-xs px-3 py-1 rounded font-bold z-20 uppercase">
