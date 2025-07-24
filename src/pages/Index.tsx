@@ -83,7 +83,7 @@ export default function Home() {
     <div 
       className="min-h-screen bg-cover bg-center bg-no-repeat text-white font-inter relative"
       style={{
-        backgroundImage: `url('/lovable-uploads/381f82d6-3bc3-46ad-937d-36de1b1396e8.png')`,
+        backgroundImage: `url('/lovable-uploads/f9987673-c8de-4920-b57a-f71676ddc59b.png')`,
       }}
     >
       {/* Content - matching exact positioning from your image */}
