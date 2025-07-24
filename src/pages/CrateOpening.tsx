@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { ArrowLeft } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
 import CrateSpinner from "../components/OpenCrates/CrateSpinner";
 
 // Sample crate content - weapons with different rarities
@@ -65,6 +66,8 @@ const featuredWeapons = [
 ];
 
 export default function CrateOpening() {
+  const navigate = useNavigate();
+  const { crateId } = useParams();
   const [spinPhase, setSpinPhase] = useState<'idle' | 'spinning' | 'stopping'>('idle');
   const [reward, setReward] = useState<typeof crateContent[0] | null>(null);
   const [timeLeft, setTimeLeft] = useState("04:38:42");
@@ -228,7 +231,10 @@ export default function CrateOpening() {
 
         {/* Navigation */}
         <div className="fixed bottom-8 left-8">
-          <button className="flex items-center justify-center text-white bg-black/60 rounded-lg p-4 border border-gray-600 hover:bg-black/80 transition-colors">
+          <button 
+            onClick={() => navigate('/')}
+            className="flex items-center justify-center text-white bg-black/60 rounded-lg p-4 border border-gray-600 hover:bg-black/80 transition-colors"
+          >
             <ArrowLeft className="h-6 w-6" />
           </button>
         </div>

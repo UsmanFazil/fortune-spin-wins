@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { ArrowLeft } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 // Using your exact provided crate images
 const woodenCrate = "/lovable-uploads/56177f88-ecbd-4d8c-8758-edfc4ccf5875.png"; // Your WEAPON crate
@@ -66,6 +67,7 @@ const crateData = [
 ];
 
 export default function Home() {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("ALL");
   const [userCurrency] = useState({
     silver: 163543,
@@ -80,8 +82,7 @@ export default function Home() {
   );
 
   const handleCrateClick = (crate: any) => {
-    console.log("Crate clicked:", crate.name);
-    // Add your crate opening logic here
+    navigate(`/crate/${crate.id}`);
   };
 
   return (
