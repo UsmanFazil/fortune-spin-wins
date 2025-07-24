@@ -111,17 +111,15 @@ const CrateSpinner: React.FC<CrateSpinnerProps> = ({
       
       const startOffset = currentOffset;
       const distance = targetOffset - startOffset;
-      const duration = 3000; // 3 seconds for dramatic slow-down
+      const duration = 2500; // Slightly shorter for better feel
       const startTime = performance.now();
       
       const animate = (now: number) => {
         const elapsed = now - startTime;
         const progress = Math.min(elapsed / duration, 1);
         
-        // Smooth deceleration with bounce at the end
-        const easeOut = progress < 0.9 
-          ? 1 - Math.pow(1 - progress, 4) // Strong ease out
-          : 1 - Math.pow(1 - progress, 2) + Math.sin(progress * Math.PI * 8) * 0.01; // Slight bounce
+        // Ultra smooth deceleration using cubic bezier-like easing
+        const easeOut = 1 - Math.pow(1 - progress, 3);
         
         const offset = startOffset + distance * easeOut;
         setCurrentOffset(offset);
@@ -134,8 +132,7 @@ const CrateSpinner: React.FC<CrateSpinnerProps> = ({
           animationRef.current = requestAnimationFrame(animate);
         } else {
           setWinningIndex(targetIndex);
-          // Add a small delay before calling onComplete for dramatic effect
-          setTimeout(() => onComplete?.(), 500);
+          setTimeout(() => onComplete?.(), 300);
         }
       };
       
