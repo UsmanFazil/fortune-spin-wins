@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import Confetti from "../Confetti";
 
 const getCrateImage = (crateName: string) => {
   if (crateName.toLowerCase().includes('hostile')) return "https://images.unsplash.com/photo-1518770660439-4636190af475?w=120&h=120&fit=crop";
@@ -30,6 +31,8 @@ const CrateStore: React.FC<CrateStoreProps> = ({ onViewCrate, playerId, onBuySuc
   const [buying, setBuying] = useState<string | null>(null);
   const [buyMessage, setBuyMessage] = useState("");
   const [selectedCrateType, setSelectedCrateType] = useState(CRATE_TYPES[0].value);
+  const [showConfetti, setShowConfetti] = useState(false);
+  const [successCrate, setSuccessCrate] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchCrates = async () => {
@@ -66,12 +69,19 @@ const CrateStore: React.FC<CrateStoreProps> = ({ onViewCrate, playerId, onBuySuc
     
     // Simulate purchase
     setTimeout(() => {
-      setBuyMessage("✅ Purchase successful!");
+      setBuyMessage("🎉 Purchase successful!");
+      setSuccessCrate(crate.guid);
+      setShowConfetti(true);
       setBuying(null);
       if (onBuySuccess) onBuySuccess();
       
-      setTimeout(() => setBuyMessage(""), 3000);
-    }, 2000);
+      // Hide success state after animation
+      setTimeout(() => {
+        setBuyMessage("");
+        setSuccessCrate(null);
+        setShowConfetti(false);
+      }, 4000);
+    }, 1500);
   };
 
   if (loading) {
@@ -104,7 +114,11 @@ const CrateStore: React.FC<CrateStoreProps> = ({ onViewCrate, playerId, onBuySuc
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {crates.map((crate) => (
-          <div key={crate.guid} className="bg-gray-900 rounded-xl shadow-lg p-6 flex flex-col items-center hover:scale-105 transition-transform border border-gray-700">
+          <div key={crate.guid} className={`bg-gray-900 rounded-xl shadow-lg p-6 flex flex-col items-center transition-all duration-500 border ${
+            successCrate === crate.guid 
+              ? 'border-green-400 bg-green-900/20 scale-105 shadow-green-400/50 shadow-2xl animate-pulse' 
+              : 'border-gray-700 hover:scale-105'
+          }`}>
             <img 
               src={getCrateImage(crate.name)} 
               alt="Crate" 
@@ -129,25 +143,52 @@ const CrateStore: React.FC<CrateStoreProps> = ({ onViewCrate, playerId, onBuySuc
                 <span role="img" aria-label="eye">👁️</span> View
               </button>
               <button
-                className="flex-1 px-4 py-2 bg-green-600 rounded hover:bg-green-700 transition-colors flex items-center justify-center gap-1"
+                className={`flex-1 px-4 py-2 rounded transition-all duration-300 flex items-center justify-center gap-1 font-semibold ${
+                  buying === crate.guid 
+                    ? 'bg-yellow-600 hover:bg-yellow-700 animate-pulse' 
+                    : successCrate === crate.guid
+                    ? 'bg-green-600 hover:bg-green-700 animate-bounce'
+                    : 'bg-green-600 hover:bg-green-700 hover:scale-105'
+                }`}
                 disabled={buying === crate.guid}
                 onClick={() => handleBuyCrate(crate)}
               >
-                {buying === crate.guid ? 'Buying...' : (
+                {buying === crate.guid ? (
+                  <>
+                    <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
+                    Buying...
+                  </>
+                ) : successCrate === crate.guid ? (
+                  <>
+                    <span className="text-xl">✅</span> Purchased!
+                  </>
+                ) : (
                   <>
                     <span role="img" aria-label="cart">🛒</span> Buy
                   </>
                 )}
               </button>
             </div>
-            {buyMessage && buying === crate.guid && (
-              <div className="mt-4 text-center text-lg font-bold text-yellow-400 w-full bg-gray-800 rounded p-2 shadow">
+            {buyMessage && (buying === crate.guid || successCrate === crate.guid) && (
+              <div className={`mt-4 text-center text-lg font-bold w-full rounded-lg p-3 shadow-lg transition-all duration-500 ${
+                successCrate === crate.guid 
+                  ? 'text-green-300 bg-green-800/50 border border-green-400/50 animate-fade-in' 
+                  : 'text-yellow-300 bg-yellow-800/50 border border-yellow-400/50'
+              }`}>
                 {buyMessage}
+                {successCrate === crate.guid && (
+                  <div className="mt-2 text-sm text-green-200">
+                    Check your inventory for the new crate!
+                  </div>
+                )}
               </div>
             )}
           </div>
         ))}
       </div>
+      
+      {/* Confetti Animation */}
+      {showConfetti && <Confetti />}
     </div>
   );
 };
