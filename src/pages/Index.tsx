@@ -21,16 +21,12 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
   const [showWin, setShowWin] = useState(false);
   const [spinOffset, setSpinOffset] = useState(0);
   const animationRef = useRef<number>();
+  const [isSpinning, setIsSpinning] = useState(false);
 
-  // Responsive item width helper
-  const getItemWidth = () => {
-    if (typeof window !== 'undefined') {
-      if (window.innerWidth < 640) return 208;
-      if (window.innerWidth < 768) return 248;
-      return 288;
-    }
-    return 288;
-  };
+  // Item configuration
+  const itemWidth = 280;
+  const itemGap = 32; // 8 * 4 = 32px (gap-8)
+  const totalItemWidth = itemWidth + itemGap;
 
   // Safe modulo for positive array indices
   function mod(n: number, m: number) {
@@ -40,20 +36,24 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
   // Animation effects for casino-style spinning
   useEffect(() => {
     if (spinPhase === 'spinning') {
+      setIsSpinning(true);
       setSpinOffset(0);
       let offset = 0;
-      let speed = 30; // Start fast
+      let speed = 25; // Start speed
       let lastTime = performance.now();
+      
       const animate = (now: number) => {
         const delta = now - lastTime;
         lastTime = now;
         offset += speed * (delta / 16);
         setSpinOffset(offset);
+        
         if (spinPhase === 'spinning') {
           animationRef.current = requestAnimationFrame(animate);
         }
       };
       animationRef.current = requestAnimationFrame(animate);
+      
       return () => {
         if (animationRef.current) {
           cancelAnimationFrame(animationRef.current);
@@ -65,7 +65,6 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
   // Deceleration phase - slow down and stop at winner
   useEffect(() => {
     if (spinPhase === 'stopping' && winningTag && crateContent && crateContent.length > 0) {
-      const itemWidth = getItemWidth();
       const winnerItemIndex = crateContent.findIndex((item: any) => item.tag === winningTag);
       
       if (winnerItemIndex === -1) {
@@ -73,28 +72,31 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
         return;
       }
       
-      // Calculate the target position to center the winning item
-      const targetPosition = winnerItemIndex * itemWidth;
-      const currentOffset = spinOffset;
+      // Calculate where the winning item should be positioned (center of screen)
+      const screenCenter = window.innerWidth / 2;
+      const containerCenter = screenCenter - (itemWidth / 2);
       
-      // Add multiple full rotations plus the target position
-      const extraSpins = crateContent.length * itemWidth * 5; // 5 full rotations
-      const finalOffset = currentOffset + extraSpins + (targetPosition - (currentOffset % (crateContent.length * itemWidth)));
+      // Calculate the final position for the winning item to be centered
+      const extraSpins = 5; // Number of extra full rotations
+      const totalDistance = extraSpins * crateContent.length * totalItemWidth;
+      const targetPosition = totalDistance + (winnerItemIndex * totalItemWidth);
       
       const duration = 2500; // 2.5 seconds deceleration
       const startTime = performance.now();
-      const startOffset = currentOffset;
+      const startOffset = spinOffset;
       
       const animate = (now: number) => {
         const elapsed = now - startTime;
         const progress = Math.min(elapsed / duration, 1);
         // Ease out cubic for smooth deceleration
         const easeOut = 1 - Math.pow(1 - progress, 3);
-        const currentAnimOffset = startOffset + (finalOffset - startOffset) * easeOut;
+        const currentAnimOffset = startOffset + (targetPosition - startOffset) * easeOut;
         setSpinOffset(currentAnimOffset);
         
         if (progress < 1) {
           animationRef.current = requestAnimationFrame(animate);
+        } else {
+          setIsSpinning(false);
         }
       };
       animationRef.current = requestAnimationFrame(animate);
@@ -112,19 +114,12 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
     if (!isOpen) {
       setSpinOffset(0);
       setShowWin(false);
+      setIsSpinning(false);
       if (animationRef.current) {
         cancelAnimationFrame(animationRef.current);
       }
     }
   }, [isOpen]);
-
-  useEffect(() => {
-    if (winnerIndex !== null) {
-      setTimeout(() => setShowWin(true), 400);
-    } else {
-      setShowWin(false);
-    }
-  }, [winnerIndex]);
 
   const getRarityColor = (rarity: number) => {
     switch (rarity) {
@@ -136,6 +131,7 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
       default: return "border-gray-400 bg-gray-500/20 text-gray-400";
     }
   };
+
   const getRarityName = (rarity: number) => {
     switch (rarity) {
       case 1: return "Legendary";
@@ -146,7 +142,9 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
       default: return "Common";
     }
   };
+
   if (!isOpen) return null;
+
   return (
     <div className="fixed inset-0 z-50 bg-black w-screen h-screen overflow-y-auto">
       <div className="relative w-full h-full flex flex-col text-white" style={{
@@ -158,95 +156,105 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
         `
       }}>
         <button className="absolute top-8 right-12 text-gray-400 hover:text-white text-4xl font-bold z-20" onClick={onClose}>×</button>
+        
         <div className="text-center pt-12 pb-8">
           <h1 className="text-4xl font-bold text-white mb-2">HOSTILE LEGACY BOX</h1>
         </div>
+
         <div className="relative mb-8 px-4">
           <div className="flex justify-center">
-            <div className="relative w-full max-w-[900px] min-h-[240px] flex items-center justify-center">
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[200px] sm:w-[240px] md:w-[280px] h-[180px] sm:h-[200px] md:h-[220px] border-4 border-yellow-400 rounded-lg bg-yellow-400/10 z-10 pointer-events-none"></div>
+            <div className="relative w-full max-w-[900px] min-h-[240px] flex items-center justify-center overflow-hidden">
+              {/* Center target box */}
+              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[280px] h-[220px] border-4 border-yellow-400 rounded-lg bg-yellow-400/10 z-10 pointer-events-none"></div>
+              
+              {/* Spinning items container */}
               <div 
-                className="flex gap-2 sm:gap-4 md:gap-8 absolute left-1/2 top-1/2 transform -translate-y-1/2 transition-transform duration-75"
+                className="flex gap-8 absolute left-1/2 top-1/2 transform -translate-y-1/2 transition-transform duration-75"
                 style={{
                   transform: `translateX(calc(-50% - ${spinOffset}px)) translateY(-50%)`,
                   willChange: 'transform'
                 }}
               >
-              
-              {crateContent && crateContent.length > 0 && (() => {
-  const itemWidth = 288;
-  const totalItems = crateContent.length;
+                {crateContent && crateContent.length > 0 && (() => {
+                  const totalItems = crateContent.length;
+                  const buffer = 6; // Reduced buffer for better performance
+                  
+                  // Calculate which items to render based on current offset
+                  const centerVirtualIndex = Math.floor(spinOffset / totalItemWidth);
+                  const start = centerVirtualIndex - buffer;
+                  const end = centerVirtualIndex + buffer;
 
-  // Calculate center offset to properly align items
-  const centerOffset = itemWidth / 2;
-  const adjustedSpinOffset = spinOffset - centerOffset;
-  
-  // Number of virtual items around the center to render
-  const buffer = 12;
-  const centerVirtualIndex = Math.floor(adjustedSpinOffset / itemWidth);
-  const start = centerVirtualIndex - buffer;
-  const end = centerVirtualIndex + buffer;
+                  return Array.from({ length: end - start + 1 }, (_, i) => {
+                    const virtualIndex = start + i;
+                    const realIndex = mod(virtualIndex, totalItems);
+                    const item = crateContent[realIndex];
+                    
+                    if (!item || !item.tag) {
+                      return null;
+                    }
+                    
+                    const itemPosition = virtualIndex * totalItemWidth;
+                    const distanceFromCenter = Math.abs(itemPosition - spinOffset);
+                    const isCentered = distanceFromCenter < (totalItemWidth / 2);
+                    const isWinner = !isSpinning && winningTag && item.tag === winningTag && isCentered;
 
-  return Array.from({ length: end - start + 1 }, (_, i) => {
-    const virtualIndex = start + i;
-    // Safe modulo calculation to ensure positive indices
-    const realIndex = ((virtualIndex % totalItems) + totalItems) % totalItems;
-    const item = crateContent[realIndex];
-    
-    // Safety check for undefined items
-    if (!item || !item.tag) {
-      return null;
-    }
-    
-    const itemPosition = virtualIndex * itemWidth;
-    const distanceFromCenter = Math.abs(itemPosition - adjustedSpinOffset);
-    const isCentered = distanceFromCenter < (itemWidth / 2);
-
-    return (
-      <div 
-        key={`item-${virtualIndex}-${realIndex}-${item.tag}`} 
-        className={`relative p-4 rounded-lg border-2 flex-shrink-0 transition-all duration-300 ${
-          isCentered ? 'border-yellow-400 bg-yellow-500/20 scale-105' :
-          'border-gray-600 bg-gray-800/50 scale-95'
-        }`} 
-        style={{ width: 280, height: 200 }}
-      >
-        <div className="text-center h-full flex flex-col">
-          <div className="text-lg font-bold text-white mb-2">
-            {item.tag?.replace('inventory.weapon.', '').replace('inventory.vanity.', '').replace(/_/g, ' ').toUpperCase()}
-          </div>
-          <div className="flex-1 flex items-center justify-center bg-gray-900/50 rounded mb-2">
-            <img 
-              src={getItemImage(item.tag)} 
-              alt={item.tag} 
-              className="w-30 h-30 object-contain"
-              style={{ width: 120, height: 120 }}
-              onError={(e) => {
-                e.currentTarget.src = "https://images.unsplash.com/photo-1518770660439-4636190af475?w=120&h=120&fit=crop";
-              }}
-            />
-          </div>
-          <div className={`text-sm font-semibold ${getRarityColor(item.rarity)}`}>{getRarityName(item.rarity)}</div>
-        </div>
-        {isCentered && spinPhase === 'idle' && winningTag && item.tag === winningTag && (
-          <div className="absolute -top-2 -right-2 bg-yellow-500 text-black px-2 py-1 rounded text-xs font-bold">Winner!</div>
-        )}
-      </div>
-    );
-  }).filter(Boolean);
-})()}
-
-                
+                    return (
+                      <div 
+                        key={`item-${virtualIndex}-${realIndex}`} 
+                        className={`relative p-4 rounded-lg border-2 flex-shrink-0 transition-all duration-300 ${
+                          isWinner ? 'border-yellow-400 bg-yellow-500/30 scale-110' :
+                          isCentered ? 'border-yellow-400 bg-yellow-500/20 scale-105' :
+                          'border-gray-600 bg-gray-800/50 scale-95'
+                        }`} 
+                        style={{ width: itemWidth, height: 200 }}
+                      >
+                        <div className="text-center h-full flex flex-col">
+                          <div className="text-lg font-bold text-white mb-2">
+                            {item.tag?.replace('inventory.weapon.', '').replace('inventory.vanity.', '').replace(/_/g, ' ').toUpperCase()}
+                          </div>
+                          <div className="flex-1 flex items-center justify-center bg-gray-900/50 rounded mb-2">
+                            <img 
+                              src={getItemImage(item.tag)} 
+                              alt={item.tag} 
+                              className="w-[120px] h-[120px] object-contain"
+                              onError={(e) => {
+                                e.currentTarget.src = "https://images.unsplash.com/photo-1518770660439-4636190af475?w=120&h=120&fit=crop";
+                              }}
+                            />
+                          </div>
+                          <div className={`text-sm font-semibold ${getRarityColor(item.rarity)}`}>
+                            {getRarityName(item.rarity)}
+                          </div>
+                        </div>
+                        
+                        {isWinner && (
+                          <div className="absolute -top-2 -right-2 bg-yellow-500 text-black px-2 py-1 rounded text-xs font-bold animate-pulse">
+                            WINNER!
+                          </div>
+                        )}
+                      </div>
+                    );
+                  }).filter(Boolean);
+                })()}
               </div>
             </div>
           </div>
         </div>
+
         <div className="flex justify-center mb-4">
           <div className="w-0 h-0 border-l-[20px] border-r-[20px] border-t-[25px] border-transparent border-t-yellow-400"></div>
         </div>
+
         <div className="flex justify-center mb-8">
-          <button className="px-20 py-4 bg-yellow-600 hover:bg-yellow-700 rounded-lg font-bold text-2xl disabled:opacity-60 shadow-lg transition-all duration-200" onClick={onSpin} disabled={spinning || winnerIndex !== null}>{spinning ? 'Spinning...' : 'SPIN'}</button>
+          <button 
+            className="px-20 py-4 bg-yellow-600 hover:bg-yellow-700 rounded-lg font-bold text-2xl disabled:opacity-60 shadow-lg transition-all duration-200" 
+            onClick={onSpin} 
+            disabled={isSpinning}
+          >
+            {isSpinning ? 'Spinning...' : 'SPIN'}
+          </button>
         </div>
+
         <div className="text-center mb-6">
           <div className="flex items-center justify-center gap-2 text-gray-300">
             <div className="w-4 h-4 rounded-full border border-gray-400 flex items-center justify-center">
@@ -255,6 +263,7 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
             <span>By opening this set, you will receive one of these items.</span>
           </div>
         </div>
+
         <div className="flex-1 px-8 pb-8">
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4 max-w-6xl mx-auto">
             {crateContent && crateContent.map((item: any, idx: number) => (
@@ -275,7 +284,6 @@ function FullscreenCrateModal({ isOpen, onClose, onSpin, spinning, carouselItems
             ))}
           </div>
         </div>
-        {/* Removed congratulations popup */}
       </div>
     </div>
   );
