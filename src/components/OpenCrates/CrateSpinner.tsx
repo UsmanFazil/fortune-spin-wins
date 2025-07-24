@@ -1,3 +1,4 @@
+
 import React, { useEffect, useRef, useState } from "react";
 
 const CARD_WIDTH = 200; // Large casino-style cards
@@ -10,6 +11,7 @@ interface CrateItem {
   rarity: number;
   type: string;
   material_id?: string;
+  image?: string;
 }
 
 interface CrateSpinnerProps {
@@ -35,7 +37,8 @@ const CrateSpinner: React.FC<CrateSpinnerProps> = ({
   const animationRef = useRef<number>();
   
   // Create many repeated items for smooth infinite scroll effect
-  const repeatedContent = Array(30).fill(content).flat(); // More repetitions for longer spin
+  // Use more repetitions to ensure we never run out of content
+  const repeatedContent = Array(50).fill(content).flat();
   
   // Find a random reward position in the later cycles to ensure long spin
   const getRandomRewardPosition = () => {
@@ -43,8 +46,9 @@ const CrateSpinner: React.FC<CrateSpinnerProps> = ({
     const minCycles = 15; // Minimum cycles before it can stop
     const maxCycles = 18; // Maximum cycles
     const randomCycle = Math.floor(Math.random() * (maxCycles - minCycles + 1)) + minCycles;
-    const rewardInCycle = repeatedContent.findIndex(item => item.material_id === reward.material_id);
-    return randomCycle * content.length + (rewardInCycle % content.length);
+    const rewardInCycle = content.findIndex(item => item.material_id === reward.material_id);
+    if (rewardInCycle === -1) return randomCycle * content.length; // If not found, use first item
+    return randomCycle * content.length + rewardInCycle;
   };
 
   // Main spinning animation
@@ -67,6 +71,13 @@ const CrateSpinner: React.FC<CrateSpinnerProps> = ({
         }
         
         offset += velocity * (delta / 16);
+        
+        // Reset offset when it gets too large to prevent running out of content
+        const maxOffset = repeatedContent.length * TOTAL_CARD_WIDTH;
+        if (offset > maxOffset * 0.8) {
+          offset = offset % (content.length * TOTAL_CARD_WIDTH);
+        }
+        
         setCurrentOffset(offset);
         
         if (containerRef.current) {
@@ -86,7 +97,7 @@ const CrateSpinner: React.FC<CrateSpinnerProps> = ({
         }
       };
     }
-  }, [spinPhase]);
+  }, [spinPhase, content.length, repeatedContent.length]);
 
   // Deceleration and stopping animation
   useEffect(() => {
@@ -141,10 +152,12 @@ const CrateSpinner: React.FC<CrateSpinnerProps> = ({
   // Reset when idle
   useEffect(() => {
     if (spinPhase === 'idle') {
-      setCurrentOffset(0);
+      // Reset to a position that shows the first few items
+      const resetOffset = 0;
+      setCurrentOffset(resetOffset);
       setWinningIndex(null);
       if (containerRef.current) {
-        containerRef.current.style.transform = `translateX(0px)`;
+        containerRef.current.style.transform = `translateX(-${resetOffset}px)`;
       }
     }
   }, [spinPhase]);
