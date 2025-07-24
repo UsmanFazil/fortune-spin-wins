@@ -105,21 +105,24 @@ const CrateSpinner: React.FC<CrateSpinnerProps> = ({
       const targetIndex = getRandomRewardPosition();
       if (targetIndex === -1) return;
       
+      // Calculate precise center position for the winning card
       const containerWidth = typeof window !== 'undefined' ? window.innerWidth : 1200;
-      const centerOffset = containerWidth / 2 - CARD_WIDTH / 2;
-      const targetOffset = targetIndex * TOTAL_CARD_WIDTH - centerOffset;
+      const centerPosition = containerWidth / 2;
+      // Position the card so its center aligns with screen center
+      const targetOffset = (targetIndex * TOTAL_CARD_WIDTH) + (TOTAL_CARD_WIDTH / 2) - centerPosition;
       
       const startOffset = currentOffset;
       const distance = targetOffset - startOffset;
-      const duration = 2500; // Slightly shorter for better feel
+      const duration = 2000; // Shorter duration for snappier feel
       const startTime = performance.now();
       
       const animate = (now: number) => {
         const elapsed = now - startTime;
         const progress = Math.min(elapsed / duration, 1);
         
-        // Ultra smooth deceleration using cubic bezier-like easing
-        const easeOut = 1 - Math.pow(1 - progress, 3);
+        // Use exponential easing that decelerates smoothly without overshooting
+        // This creates a more natural deceleration like real slot machines
+        const easeOut = 1 - Math.exp(-5 * progress);
         
         const offset = startOffset + distance * easeOut;
         setCurrentOffset(offset);
@@ -131,8 +134,14 @@ const CrateSpinner: React.FC<CrateSpinnerProps> = ({
         if (progress < 1) {
           animationRef.current = requestAnimationFrame(animate);
         } else {
+          // Ensure final position is perfectly aligned
+          const finalOffset = targetOffset;
+          setCurrentOffset(finalOffset);
+          if (containerRef.current) {
+            containerRef.current.style.transform = `translateX(-${finalOffset}px)`;
+          }
           setWinningIndex(targetIndex);
-          setTimeout(() => onComplete?.(), 300);
+          setTimeout(() => onComplete?.(), 200);
         }
       };
       
