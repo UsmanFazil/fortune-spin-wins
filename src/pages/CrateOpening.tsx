@@ -136,57 +136,34 @@ export default function CrateOpening() {
           </div>
         </div>
 
-        {/* Featured Weapons */}
-        <div className="flex gap-4 mb-8 justify-center">
-          {featuredWeapons.map((weapon, index) => (
-            <div key={index} className={`${weapon.rarityColor} border-2 rounded-lg p-6 w-80 h-60`}>
-              <div className="text-center">
-                <h3 className="text-xl font-bold mb-2">{weapon.name}</h3>
-                <p className="text-yellow-400 text-sm mb-4">[{weapon.variant}]</p>
-                <div className="h-32 flex items-center justify-center mb-4">
-                  <img 
-                    src={weapon.image} 
-                    alt={`${weapon.name} ${weapon.variant}`}
-                    className="max-h-full max-w-full object-contain"
-                  />
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm text-gray-300">{weapon.rarity}</span>
-                  <div className="flex items-center gap-1 text-xs text-gray-400">
-                    <span>⚠</span>
-                    <span>Extractable</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Spin Button and Timer */}
-        <div className="text-center mb-8">
-          <button
-            onClick={handleSpin}
-            disabled={spinPhase !== 'idle'}
-            className={`bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 text-black font-bold py-4 px-16 rounded-lg text-xl transition-colors ${
-              spinPhase !== 'idle' ? 'cursor-not-allowed' : 'cursor-pointer'
-            }`}
-          >
-            {spinPhase === 'idle' ? 'SPIN' : 'SPINNING...'}
-          </button>
-          <div className="mt-2 text-sm text-gray-300">
-            UNLOCKS IN: {timeLeft}
+        {/* Upper Section - Spinning Area */}
+        <div className="flex-1 flex flex-col items-center justify-center mb-8">
+          {/* Spinning Items Display */}
+          <div className="mb-8">
+            <CrateSpinner
+              content={crateContent}
+              reward={reward}
+              spinning={spinPhase !== 'idle'}
+              onComplete={handleSpinComplete}
+              spinPhase={spinPhase}
+            />
           </div>
-        </div>
 
-        {/* Crate Spinner */}
-        <div className="mb-8">
-          <CrateSpinner
-            content={crateContent}
-            reward={reward}
-            spinning={spinPhase !== 'idle'}
-            onComplete={handleSpinComplete}
-            spinPhase={spinPhase}
-          />
+          {/* Spin Button and Timer */}
+          <div className="text-center">
+            <button
+              onClick={handleSpin}
+              disabled={spinPhase !== 'idle'}
+              className={`bg-yellow-600 hover:bg-yellow-700 disabled:bg-gray-600 text-black font-bold py-4 px-16 rounded-lg text-xl transition-colors ${
+                spinPhase !== 'idle' ? 'cursor-not-allowed' : 'cursor-pointer'
+              }`}
+            >
+              {spinPhase === 'idle' ? 'SPIN' : 'SPINNING...'}
+            </button>
+            <div className="mt-2 text-sm text-gray-300">
+              UNLOCKS IN: {timeLeft}
+            </div>
+          </div>
         </div>
 
         {/* Items Grid - showing all possible items */}
